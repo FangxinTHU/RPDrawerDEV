@@ -1,0 +1,26 @@
+牙齿坐标记录：
+teethPos[32]
+对于teeth[i]
+teeth[i][0]：牙齿中心点坐标
+teeth[i][1]：近中坐标
+teeth[i][2]：远中坐标
+teeth[i][3]：颊侧坐标
+teeth[i][4]：舌侧坐标
+teeth[i][5]：近中颊侧坐标
+teeth[i][6]：近中舌侧坐标
+teeth[i][7]：远中颊侧坐标
+teeth[i][8]：远中舌侧坐标
+teeth[i][9]：颊侧外延坐标
+teeth[i][10]：舌侧外延坐标
+
+牙齿信息记录：
+teethList[32]
+对于teethList[i]
+teethList[i][0]——————0：未缺失；1：缺失
+teethList[i][1]——————0：无基托；1：完整基托；2：只保留舌侧基托
+teethList[i][2]——————0：无卡环；1111：铸造 近中 双侧卡环；112：铸造 近中 颊侧卡环；121
+teethList[0][3]——————0：无支托；1：近中支托；2：远中支托
+teethList[0]
+teethList[0]
+teethList[0]
+teethList[0]

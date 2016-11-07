@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+</head>
+<body style="text-align:center;">
+<div style="margin:0 auto; width:1200px;" >
+	<canvas id="myCanvas" width="600" height="600" style="border:1px solid #c3c3c3;float:left;"></canvas>
+
+	<div id="teethnav" style="float:left;text-align:left;">
+		选项：<br>
+		<input type="button" class = "btn" id = "lost" onclick="lostSelected();" value="缺失"><br>
+		基托：<br>
+		<select id = "base" onchange="baseSelect()">
+			<option value="0">--请选择--</option>
+			<option value="21" >完整基托</option>
+			<option value="22" >只保留舌侧</option>
+		</select><br>
+		支托：<br>
+		<select id = "support" onchange="supportSelect()">
+			<option value="0">--请选择--</option>
+			<option value="41" >支托</option>
+		</select><br>
+
+		卡环：<br>
+		<select id = "clasp" onchange="claspSelected()">
+			<option value="0">--请选择--</option>
+			<option value="31" >普通三臂卡环</option>
+		</select><br>
+		
+		
+		<input type="button" class = "btn" id = "conn" onclick="dispConn(false);" value="显示/隐藏连接体"><br>
+		<input type="button" class = "btn" id = "modfconn" onclick="dispConn(true);" value="调整连接体">
+		<input type="button" class = "btn" id = "modfconnconf" onclick="modfconnconf();" value="确认调整"><br>
+		<input type="button" class = "btn" id = "conf" onclick="confset();" value="刷新图形"></br>
+		<input type="button" class = "btn" id = "undo" onclick="undo();" value="撤销"></br>
+		<input type="button" class = "btn" id = "redo" onclick="redo();" value="重做"></br>
+
+	</div>
+
+	<div id="selectList" style="clear:both;text-align:left;"></div>
+</div>
+
+	<script type="text/javascript" src="./js/jquery-1.12.2.min.js"></script>
+	<script type="text/javascript" src="./js/jcanvas.min.js"></script>
+	<script type="text/javascript" src="./js/jcanvas-handles.min.js"></script>
+	<script type="text/javascript" src="./js/drawyourteeth.js"></script>
+	
+
+</body>
+</html>
