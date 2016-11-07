@@ -2,31 +2,49 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	
+	<link rel="stylesheet" href="./css/pure-min.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>可摘局部义齿设计工具</title>
+	<link rel="shortcut icon" href="favicon.ico" />
 </head>
 <body style="text-align:center;">
-<div style="margin:0 auto; width:1200px;" >
+<div style="margin:0 auto; width:1200px; margin-top:80px;" >
 	<canvas id="myCanvas" width="600" height="600" style="border:1px solid #c3c3c3;float:left;"></canvas>
 
-	<div id="teethnav" style="float:left;text-align:left;">
-		选项：<br>
+	<div id="teethnav" style="float:left;text-align:left;margin-left:50px;font-family:'微软雅黑';">
+		<div style="font-size:20px;margin-bottom:15px;">请选择：</div>
 		<input type="button" class = "btn" id = "lost" onclick="lostSelected();" value="缺失"><br>
 		基托：<br>
-		<select id = "base" onchange="baseSelect()">
+		<select id = "base" onchange="baseSelected();">
 			<option value="0">--请选择--</option>
 			<option value="21" >完整基托</option>
 			<option value="22" >只保留舌侧</option>
 		</select><br>
 		支托：<br>
-		<select id = "support" onchange="supportSelect()">
+		<select id = "support" onchange="supportSelected();">
 			<option value="0">--请选择--</option>
 			<option value="41" >支托</option>
 		</select><br>
 
 		卡环：<br>
-		<select id = "clasp" onchange="claspSelected()">
+		工艺：
+		<select id = "clasptype" onchange="claspSelected();">
 			<option value="0">--请选择--</option>
-			<option value="31" >普通三臂卡环</option>
+			<option value="1" >铸造</option>
+			<option value="2" >弯制</option>
+		</select><br>
+		位置：
+		<select id = "clasppos" onchange="claspSelected();">
+			<option value="0">--请选择--</option>
+			<option value="1" >双侧</option>
+			<option value="2" >颊侧</option>
+			<option value="3" >舌侧</option>
+		</select><br>
+		类型：
+		<select id = "clasplength" onchange="claspSelected();">
+			<option value="0">--请选择--</option>
+			<option value="1" >全卡</option>
+			<option value="2" >半卡</option>
 		</select><br>
 		
 		

@@ -563,8 +563,12 @@ function drawsupport(current, pos, tmp)
 		strokeWidth: 2,
 		layer: true,
 		closed: true,
-		name: 'support'
+		
 	};
+	if(tmp)
+	{
+		obj.name = 'support';
+	}
 	if((current >= 0 && current <= 4) || (current >= 11 && current <= 15))
 	{
 		var x,y;
@@ -615,35 +619,97 @@ function drawsupport(current, pos, tmp)
 
 
 //绘制卡环
-function drawclasp(current, pos, tmp)
+function drawclasp(current, pos1, type, pos2, length, tmp)
 {
 	cxt.clearRect(0, 0, c.width, c.height);
 	$('canvas').removeLayer('clasp');
-	var sourceString;
-	sourceString = './img/'+ (current+1) +'-1' + pos + '.png';
+	
 	var obj = {
-		type: 'image',
+		type: 'path',
         layer: true,
-        source: sourceString,
-        x: picPosX[current], 
-        y: picPosY[current],
-        name :'clasp'
+		strokeStyle: '#000000'
 	};
-	$('canvas').addLayer(obj);
-	var layers = $('canvas').getLayers();
-	var temp = layers[layers.length-1];
-	for(var i = 0; i < layers.length; i++)
+	if(tmp)
 	{
-		if(layers[i].name == current+1)
-		{
-			for(var j = layers.length-1; j >= i+2; j--)
-			{
-				layers[j] = layers[j-1];
-			}
-			layers[i+1] = temp;
-			break;
-		}
+		obj.name = 'clasp';
 	}
+	if(type == 1)
+	{
+		obj.strokeWidth = 4;
+	}
+	else
+	{
+		obj.strokeWidth = 2;
+	}
+	var pathlist;
+	
+	if(pos1 == 1)
+		if(pos2 == 1)
+			if(length == 1)
+				pathlist = [2,7,3,5,1,6,4,8,2];
+			else
+				pathlist = [7,3,5,1,6,4,8];
+		else if(pos2 == 2)
+			if(length == 1)
+				pathlist = [2,7,3,5,1,6];
+			else
+				pathlist = [7,3,5,1,6];
+		else
+			if(length == 1)
+				pathlist = [2,8,4,6,1,5];
+			else
+				pathlist = [8,4,6,1,5];
+	else
+		if(pos2 == 1)
+			if(length == 1)
+				pathlist = [1,5,3,7,2,8,4,6,1];
+			else
+				pathlist = [5,3,7,2,8,4,6];
+		else if(pos2 == 2)
+			if(length == 1)
+				pathlist = [1,5,3,7,2,8];
+			else
+				pathlist = [5,3,7,2,8];
+		else
+			if(length == 1)
+				pathlist = [1,6,4,8,2,7];
+			else
+				pathlist = [6,4,8,2,7];
+	
+	var count = 1;
+	attrname = 'p'+ count;
+	var tmpobj = {};
+	tmpobj.type = 'quadratic';
+	var cx,cy;
+	var k1, k2;
+	for(var i = 2; i < pathlist.length-1; i++)
+	{
+		
+		k1 = (teethPos[current][pathlist[i-2]][1] - teethPos[current][pathlist[i]][1]) / (teethPos[current][pathlist[i-2]][0] - teethPos[current][pathlist[i]][0]);
+		k2 = (teethPos[current][pathlist[i-1]][1] - teethPos[current][pathlist[i+1]][1]) / (teethPos[current][pathlist[i-1]][0] - teethPos[current][pathlist[i+1]][0]);
+		cx = (k1*teethPos[current][pathlist[i-1]][0] - k2*teethPos[current][pathlist[i]][0] + teethPos[current][pathlist[i]][1] - teethPos[current][pathlist[i-1]][1])/(k1-k2);
+		cy = k2*(cx-teethPos[current][pathlist[i]][0])+teethPos[current][pathlist[i]][1];
+		tmpobj.cx1 = cx;
+		tmpobj.cy1 = cy;
+		tmpobj.x2 = teethPos[current][pathlist[i]][0];
+		tmpobj.y2 = teethPos[current][pathlist[i]][1];
+		if(i == 2)
+		{
+			tmpobj.x1 = teethPos[current][pathlist[1]][0];
+			tmpobj.y1 = teethPos[current][pathlist[1]][1];
+			obj[attrname] = $.extend(true, {}, tmpobj);
+			delete tmpobj.x1;
+			delete tmpobj.y1;
+		}
+		else
+		{
+			obj[attrname] = $.extend(true, {}, tmpobj);
+		}
+		count ++;
+		attrname = 'p'+ count;
+	}
+	
+	$('canvas').addLayer(obj);
 	$('canvas').drawLayers();
 }
 
@@ -738,31 +804,21 @@ c.addEventListener("mousedown", function (evt)
 			begin = findnrst(mousePos.x, mousePos.y);
 			current = begin;
 		}
-		else if(Math.floor(state/10) == 3)
+		else if(Math.floor(state/1000) == 3)
 		{
 			var mousePos = getMousePos(c, evt);
 			current = findnrst(mousePos.x, mousePos.y);
-			if(dis(mousePos.x, mousePos.y, topMidPos[current][0], topMidPos[current][1]) < dis(mousePos.x, mousePos.y, topMidPos[current+1][0], topMidPos[current+1][1]))
+			if(teethList[current][2] != 0)
 			{
-				if(current >= 8 && current <= 23)
-				{
-					teethList[current][2] = 'A';
-				}
-				else
-				{
-					teethList[current][2] = 'B';
-				}
+				return;
+			}
+			if(dis(mousePos.x, mousePos.y,teethPos[current][1][0],teethPos[current][1][1]) < dis(mousePos.x, mousePos.y,teethPos[current][2][0],teethPos[current][2][1]))
+			{
+				teethList[current][2] = state - 2000;
 			}
 			else
 			{
-				if(current >= 8 && current <= 23)
-				{
-					teethList[current][2] = 'B';
-				}
-				else
-				{
-					teethList[current][2] = 'A';
-				}
+				teethList[current][2] = state - 1000;
 			}
 			storeChange('teethList');
 		}
@@ -781,6 +837,8 @@ c.addEventListener("mousedown", function (evt)
 			storeChange('teethList');
 		}
 	}
+	
+	//输出点击坐标
 	/*if(evt.button == 0)
 	{
 		var mousePos = getMousePos(c, evt);
@@ -816,35 +874,21 @@ c.addEventListener("mousemove", function (evt)
 			drawBase(begin, current, state%10, true);
 		}
 	}
-	else if(Math.floor(state/10) == 3)
+	else if(Math.floor(state/1000) == 3)
 	{
 		var mousePos = getMousePos(c, evt);
 		current = findnrst(mousePos.x, mousePos.y);
 		if(teethList[current][2] != 0)
 		{
-			return
+			return;
 		}
-		if(dis(mousePos.x, mousePos.y, topMidPos[current][0], topMidPos[current][1]) < dis(mousePos.x, mousePos.y, topMidPos[current+1][0], topMidPos[current+1][1]))
+		if(dis(mousePos.x, mousePos.y,teethPos[current][1][0],teethPos[current][1][1]) < dis(mousePos.x, mousePos.y,teethPos[current][2][0],teethPos[current][2][1]))
 		{
-			if(current >= 11 && current <= 20)
-			{
-				drawclasp(current, 'A', true);
-			}
-			else if((current >= 0 && current <= 4) || (current >= 27 && current <= 31))
-			{
-				drawclasp(current, 'B', true);
-			}
+			drawclasp(current, 1, Math.floor(state/100)%10, Math.floor(state/10)%10, state%10, true);
 		}
 		else
 		{
-			if(current >= 11 && current <= 20)
-			{
-				drawclasp(current, 'B', true);
-			}
-			else if((current >= 0 && current <= 4) || (current >= 27 && current <= 31))
-			{
-				drawclasp(current, 'A', true);
-			}
+			drawclasp(current, 2, Math.floor(state/100)%10, Math.floor(state/10)%10, state%10, true);
 		}
 	}
 	else if(Math.floor(state/10) == 4)
@@ -853,7 +897,7 @@ c.addEventListener("mousemove", function (evt)
 		current = findnrst(mousePos.x, mousePos.y);
 		if(teethList[current][3] != 0)
 		{
-			return
+			return;
 		}
 		if(dis(mousePos.x, mousePos.y,teethPos[current][1][0],teethPos[current][1][1]) < dis(mousePos.x, mousePos.y,teethPos[current][2][0],teethPos[current][2][1]))
 		{
@@ -864,6 +908,7 @@ c.addEventListener("mousemove", function (evt)
 			drawsupport(current, 2, true);
 		}
 	}
+	
 
 }, false); 
 
@@ -922,7 +967,7 @@ function lostSelected()
 }
 
 //切换状态：基托选择
-function baseSelect()
+function baseSelected()
 {
 	isconndisped = false;
 	confset();
@@ -936,12 +981,14 @@ function claspSelected()
 	isconndisped = false;
 	confset();
 	//标记卡环选择状态：3
-	state = parseInt($('#clasp').val());
-	$("#support").find("option:selected").prop("disabled", true);
+	if(parseInt($('#clasptype').val())*parseInt($('#clasppos').val())*parseInt($('#clasplength').val()) != 0)
+	{
+		state = 3*1000 + parseInt($('#clasptype').val())*100 + parseInt($('#clasppos').val())*10 + parseInt($('#clasplength').val());
+	}
 }
 
 //切换状态：支托选择
-function supportSelect()
+function supportSelected()
 {
 	isconndisped = false;
 	confset();
@@ -1063,6 +1110,8 @@ function loadteethmap()
 		height: 223.89,
 		groups: ['teethPic']
 	});
+	
+	//修正牙列用图片
 	/*$('canvas').drawImage({
 		layer: true,
 		source: './img/pic.png',
@@ -1073,7 +1122,8 @@ function loadteethmap()
 		groups: ['teethPic']
 	});*/
 	
-	for(var i = 0; i < 16; i++)
+	//显示所有标识点
+	/*for(var i = 0; i < 16; i++)
 	{
 		for(var j = 0; j < 11; j++)
 		{
@@ -1085,9 +1135,9 @@ function loadteethmap()
 			  layer: true,
 			});
 		}
-	}
+	}*/
 
-  //绘制缺失
+  //绘制缺失、支托
   for(var i=0; i<16;i++)
   {
   	if(teethList[i][0] == 1)
@@ -1098,7 +1148,16 @@ function loadteethmap()
   			i++;
   		}
   		drawlost(begin, i-1, false);
+		i--;
   	}
+	else if(teethList[i][2] != 0)
+	{
+		drawclasp(i, Math.floor(teethList[i][2]/1000), Math.floor(teethList[i][2]/100)%10, Math.floor(teethList[i][2]/10)%10, teethList[i][2]%10, false);
+	}
+	else if(teethList[i][3] != 0)
+	{
+		drawsupport(i, teethList[i][3], false);
+	}
   }
 
   //绘制连接体
