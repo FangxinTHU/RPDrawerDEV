@@ -721,6 +721,10 @@ function drawlost(begin, end, temp)
 
 	var a = Math.min(begin, end);
 	var b = Math.max(begin, end);
+	if(a<16 && b>15)
+	{
+		return;
+	}
 
 	var obj1 = {
 	  strokeStyle: '#FF0000',
@@ -963,7 +967,6 @@ function lostSelected()
 	isconndisped = false;
 	confset();
 	state = 1;
-	$('#lost').prop("disabled", true);
 }
 
 //切换状态：基托选择
@@ -972,7 +975,6 @@ function baseSelected()
 	isconndisped = false;
 	confset();
 	state = parseInt($('#base').val());
-	$("#base").find("option:selected").prop("disabled", true);
 }
 
 //切换状态：卡环选择
@@ -994,7 +996,6 @@ function supportSelected()
 	confset();
 	//标记卡环选择状态：4
 	state = parseInt($('#support').val());
-	$("#clasp").find("option:selected").prop("disabled", true);
 }
 
 //切换状态：显示/隐藏连接体
@@ -1026,10 +1027,6 @@ function confset()
 	redrawall();
 	state = 0;
 	begin = end = current = -1;
-	$('.btn').prop("disabled", false);
-	$("#base").find("option:selected").removeAttr("disabled");
-	$("#clasp").find("option:selected").removeAttr("disabled");
-	
 }
 
 
@@ -1150,11 +1147,11 @@ function loadteethmap()
   		drawlost(begin, i-1, false);
 		i--;
   	}
-	else if(teethList[i][2] != 0)
+	if(teethList[i][2] != 0)
 	{
 		drawclasp(i, Math.floor(teethList[i][2]/1000), Math.floor(teethList[i][2]/100)%10, Math.floor(teethList[i][2]/10)%10, teethList[i][2]%10, false);
 	}
-	else if(teethList[i][3] != 0)
+	if(teethList[i][3] != 0)
 	{
 		drawsupport(i, teethList[i][3], false);
 	}
@@ -1191,7 +1188,7 @@ function findnrst(x, y)
 {
 	var dis = (teethPos[0][0][0] - x)*(teethPos[0][0][0] - x) + (teethPos[0][0][1] - y)*(teethPos[0][0][1] - y);
 	var pos = 0;
-	for(var i = 1; i < 16; i++)
+	for(var i = 1; i < 32; i++)
 	{
 		var tmp = (teethPos[i][0][0] - x)*(teethPos[i][0][0] - x) + (teethPos[i][0][1] - y)*(teethPos[i][0][1] - y);
 		if(tmp < dis)
