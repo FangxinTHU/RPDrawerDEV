@@ -71,8 +71,8 @@ var current = -1;
 var currentMousePos = [0,0];
 
 //上颌中心点坐标
-var centerX = 124;
-var centerY = 107;
+var centerX = 197;
+var centerY = 171;
 
 //图片位置坐标
 var picPosX1 = 200;
@@ -184,22 +184,22 @@ function drawConn()
 		{
 			if(firstPoint.length == 0)
 			{
-				firstPoint = [topMidPos[i][0], topMidPos[i][1]];
+				firstPoint = teethPos[i][2-Math.floor(i/8)];
 			}
 			else
 			{
 				if(plist.length == 0)
 				{
-					if(firstPoint.toString() != [topMidPos[i][0], topMidPos[i][1]].toString() )
+					if(firstPoint.toString() != teethPos[i][2-Math.floor(i/8)].toString() )
 					{
-						plist.push([firstPoint, [topMidPos[i][0], topMidPos[i][1]], 'quadratic']);
+						plist.push([firstPoint, teethPos[i][2-Math.floor(i/8)], 'quadratic']);
 					}
 				}
 				else
 				{
-					if(plist[plist.length-1][1].toString() != [topMidPos[i][0], topMidPos[i][1]].toString())
+					if(plist[plist.length-1][1].toString() != teethPos[i][2-Math.floor(i/8)].toString())
 					{
-						plist.push([ plist[plist.length-1][1], [topMidPos[i][0], topMidPos[i][1]], 'quadratic']);
+						plist.push([ plist[plist.length-1][1], teethPos[i][2-Math.floor(i/8)], 'quadratic']);
 					}
 				}
 			}
@@ -210,43 +210,58 @@ function drawConn()
 				i++;
 			}
 			var b = i-1;
-			for(var j = a; j <= b; j++)
+			for(var j = a; j <= b; j++)    
 			{
-				plist.push([[topMidPos[j][0], topMidPos[j][1]], [topMidPos[j+1][0], topMidPos[j+1][1]], 'line']);
+				plist.push([teethPos[j][2-Math.floor(j/8)], teethPos[j][1+Math.floor(j/8)], 'line']);
 			}
 			count += 1;
 		}
 
-		if(teethList[i][2] != 0)
+		else if(teethList[i][2] != 0)
 		{
-			if((teethList[i][2] == 'A' && i >= 8 && i <= 15) || (teethList[i][2] == 'B' && i >= 0 && i <= 7))
-			{
-				var midx = topMidPos[i][0];
-				var midy = topMidPos[i][1];
-			}
-			else
-			{
-				var midx = topMidPos[i+1][0];
-				var midy = topMidPos[i+1][1];
-			}
 			if(firstPoint.length == 0)
 			{
-				firstPoint = [midx, midy];
+				firstPoint = teethPos[i][Math.floor(teethList[i][2]/1000)];
 			}
 			else
 			{
 				if(plist.length == 0)
 				{
-					if(firstPoint.toString() != [midx, midy].toString() )
+					if(firstPoint.toString() != teethPos[i][Math.floor(teethList[i][2]/1000)].toString() )
 					{
-						plist.push([ firstPoint, [midx, midy], 'quadratic']);
+						plist.push([ firstPoint, teethPos[i][Math.floor(teethList[i][2]/1000)], 'quadratic']);
 					}
 				}
 				else
 				{
-					if(plist[plist.length-1][1].toString() != [midx, midy].toString() )
+					if(plist[plist.length-1][1].toString() != teethPos[i][Math.floor(teethList[i][2]/1000)].toString() )
 					{
-						plist.push([ plist[plist.length-1][1], [midx, midy], 'quadratic']);
+						plist.push([ plist[plist.length-1][1], teethPos[i][Math.floor(teethList[i][2]/1000)], 'quadratic']);
+					}
+				}
+			}
+			count += 1;
+		}
+		else if(teethList[i][3] != 0)
+		{
+			if(firstPoint.length == 0)
+			{
+				firstPoint = teethPos[i][teethList[i][3]];
+			}
+			else
+			{
+				if(plist.length == 0)
+				{
+					if(firstPoint.toString() != teethPos[i][teethList[i][3]].toString() )
+					{
+						plist.push([ firstPoint, teethPos[i][teethList[i][3]], 'quadratic']);
+					}
+				}
+				else
+				{
+					if(plist[plist.length-1][1].toString() != teethPos[i][teethList[i][3]].toString() )
+					{
+						plist.push([ plist[plist.length-1][1], teethPos[i][teethList[i][3]], 'quadratic']);
 					}
 				}
 			}
@@ -254,6 +269,17 @@ function drawConn()
 		}
 	}
 	plist.push([plist[plist.length-1][1], firstPoint, 'quadratic']);
+	/*for(var i = 0; i < plist.length; i++)
+	{
+		if((plist[i][0][0]-centerX)*(plist[i][1][0] - centerX) < 0)
+		{
+			var p1 = [(plist[i][0][0]+centerX)/2, (plist[i][0][1]+centerY)/2];
+			var p2 = [(plist[i][1][0]+centerX)/2, (plist[i][1][1]+centerY)/2];
+			var pc = [centerX, Math.min(plist[i][0][1], plist[i][1][1])];
+			plist.splice(i, 1, [plist[i][0], pc, p1], [plist[i][0], pc, p2]);
+		}
+	}*/
+
 	
 	//读取quadraticTops中的有用信息并删除过期项
 	for(var i = 0; i < quadraticTops.length; i++)
@@ -1130,7 +1156,7 @@ function loadteethmap()
 	});*/
 	
 	//显示所有标识点
-	/*for(var i = 0; i < 32; i++)
+	for(var i = 0; i < 32; i++)
 	{
 		for(var j = 0; j < 11; j++)
 		{
@@ -1142,7 +1168,7 @@ function loadteethmap()
 			  layer: true,
 			});
 		}
-	}*/
+	}
 
   //绘制缺失、支托
   for(var i=0; i<32;i++)
