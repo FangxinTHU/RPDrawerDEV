@@ -3,7 +3,9 @@
  * version 3.0
  * V1功能：缺失标记、完整基托、舌侧基托、普通三臂卡环、连接体简单绘制
  * V2功能：连接体抛物线可调整、可撤销/重做（10步）
- * V3：功能开发中，根据新需求，更改牙列图、牙列参照点坐标数据结构，使用新结构、新需求绘制：缺失双线、基托
+ * V3：根据新需求，更改牙列图、牙列参照点坐标数据结构，使用新结构、新需求绘制：缺失双线、基托
+ * V4：根据新需求，去掉卡环图片，用图形化方式表示支托和卡环
+ * V5：根据新需求，重写连接体绘制方法（包括连接体的调整，调整功能有待调试）
  */
 
 
@@ -125,10 +127,11 @@ loadteethmap(teethList);
 */
 
 //绘制连接体
-function drawConn()
+function drawConn(type)
 {
-	var start = false;
 	var plist = [];
+	var llist = [];
+	var temp = [];
 	var obj = {
 		type: 'path',
 		fillStyle: '#FFE4E1',
@@ -138,10 +141,10 @@ function drawConn()
 		closed: true
 	};
 	var firstPoint = [];
+	var pos = 0;
 	var count = 0;
-	
+
 	var ajustObj = {
-		type: 'quadratic',
 		strokeStyle: '#c33',
 		strokeWidth: 2,
 		rounded: true,
@@ -157,138 +160,183 @@ function drawConn()
 			strokeStyle: '#c33',
 			strokeWidth: 1
 		},
+		mp: 3,
 		handlestart: function(layer) {
 			// code to run when resizing starts
-			state = -1;
+			if(layer.type == 'bezier')
+			{
+				var mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx1, layer.cy1);
+				if(dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2) < mindis)
+				{
+					mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2);
+					layer.mp = 3;
+				}
+				if(dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2) < mindis)
+				{
+					mindis = dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2);
+					layer.mp = 2;
+				}
+				if(dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1) < mindis)
+				{
+					mindis = dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1);
+					layer.mp = 1;
+				}
+			}
 		},
 		handlestop: function(layer) {
 			// code to run while resizing stops
 			state = 0;
-			for(var i = 0; i < quadraticTops.length; i++)
+			var i;
+			for(i = 0; i < quadraticTops.length; i++)
 			{
-				if(quadraticTops[i][0].toString() == [layer.x1, layer.y1].toString() && quadraticTops[i][1].toString() == [layer.x2, layer.y2].toString() )
+				if(quadraticTops[i][1].toString() == [layer.x1, layer.y1].toString() && quadraticTops[i][2].toString() == [layer.x2, layer.y2].toString() )
 				{
-					quadraticTops[i][2] = [currentMousePos.x, currentMousePos.y];
-
+					if(layer.mp > 2)
+					{
+						quadraticTops[i][layer.mp] = [currentMousePos.x, currentMousePos.y];
+					}
+					else
+					{
+						if(quadraticTops[i][layer.mp][0] == centerX)
+						{
+							quadraticTops[i][layer.mp][1] = currentMousePos.y;
+						}
+					}
+					break;
 				}
+			}
+			if(i == quadraticTops.length)
+			{
+				var temp = [];
+				if(layer.type =='bezier')
+				{
+					temp = ['Bezier', [layer.x1, layer.y1], [layer.x2, layer.y2], [layer.cx1, layer.cy1], [layer.cx2, layer.cy2]];
+					if(layer.mp == 1)
+					{
+						if(layer.x1 == centerX)
+						{
+							temp[layer.mp][0] = centerX;
+							temp[layer.mp][1] = currentMousePos.y;
+						}
+					}
+					else if(layer.mp == 2)
+					{
+						if(layer.x2 == centerX)
+						{
+							temp[layer.mp][0] = centerX;
+							temp[layer.mp][1] = currentMousePos.y;
+						}
+					}
+					else
+					{
+						temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
+					}
+				}
+				else
+				{
+					temp = ['Quadratic', [layer.x1, layer.y1], [layer.x2, layer.y2], [layer.cx1, layer.cy1]];
+					if(layer.mp == 3)
+					{
+						temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
+					}
+				}
+				quadraticTops.push(temp);
 			}
 			storeChange('quadraticTops');
 			redrawall();
 		}
 	};
-	
-	//计算连接体片段,格式：[起点,终点,线形]
+
+
+	//计算llist，格式：[起点位置，终点位置，线型]
 	for(var i = 0; i < 16; i++)
 	{
-		if(teethList[i][1] != 0)
+		if(teethList[i][1] + teethList[i][2] + teethList[i][3] > 0)
 		{
+			if(teethList[i][1] != 0)
+			{
+				pos = 2-Math.floor(i/8);
+			}
+			else if(teethList[i][2] != 0)
+			{
+				pos = Math.floor(teethList[i][2]/1000);
+			}
+			else if(teethList[i][3] != 0)
+			{
+				pos = teethList[i][3];
+			}
+
 			if(firstPoint.length == 0)
 			{
-				firstPoint = teethPos[i][2-Math.floor(i/8)];
+				firstPoint = [i, pos];
 			}
 			else
 			{
-				if(plist.length == 0)
+				if(llist.length == 0)
 				{
-					if(firstPoint.toString() != teethPos[i][2-Math.floor(i/8)].toString() )
+					if(teethPos[firstPoint[0]][firstPoint[1]].toString() != teethPos[i][pos].toString() )
 					{
-						plist.push([firstPoint, teethPos[i][2-Math.floor(i/8)], 'quadratic']);
+						llist.push([firstPoint, [i, pos], 'B']);
 					}
 				}
 				else
 				{
-					if(plist[plist.length-1][1].toString() != teethPos[i][2-Math.floor(i/8)].toString())
+					if(teethPos[llist[llist.length-1][1][0]][llist[llist.length-1][1][1]].toString() != teethPos[i][pos].toString())
 					{
-						plist.push([ plist[plist.length-1][1], teethPos[i][2-Math.floor(i/8)], 'quadratic']);
+						llist.push([ llist[llist.length-1][1], [i, pos], 'B']);
 					}
 				}
 			}
 
-			var a = i;
-			while(teethList[i][1] != 0)
+			if(teethList[i][1] != 0)
 			{
-				i++;
-			}
-			var b = i-1;
-			for(var j = a; j <= b; j++)    
-			{
-				plist.push([teethPos[j][2-Math.floor(j/8)], teethPos[j][1+Math.floor(j/8)], 'line']);
-			}
-			count += 1;
-		}
-
-		else if(teethList[i][2] != 0)
-		{
-			if(firstPoint.length == 0)
-			{
-				firstPoint = teethPos[i][Math.floor(teethList[i][2]/1000)];
-			}
-			else
-			{
-				if(plist.length == 0)
+				var a = i;
+				while(teethList[i][1] != 0)
 				{
-					if(firstPoint.toString() != teethPos[i][Math.floor(teethList[i][2]/1000)].toString() )
-					{
-						plist.push([ firstPoint, teethPos[i][Math.floor(teethList[i][2]/1000)], 'quadratic']);
-					}
+					i++;
 				}
-				else
+				var b = i-1;
+				for(var j = a; j <= b; j++)    
 				{
-					if(plist[plist.length-1][1].toString() != teethPos[i][Math.floor(teethList[i][2]/1000)].toString() )
-					{
-						plist.push([ plist[plist.length-1][1], teethPos[i][Math.floor(teethList[i][2]/1000)], 'quadratic']);
-					}
-				}
-			}
-			count += 1;
-		}
-		else if(teethList[i][3] != 0)
-		{
-			if(firstPoint.length == 0)
-			{
-				firstPoint = teethPos[i][teethList[i][3]];
-			}
-			else
-			{
-				if(plist.length == 0)
-				{
-					if(firstPoint.toString() != teethPos[i][teethList[i][3]].toString() )
-					{
-						plist.push([ firstPoint, teethPos[i][teethList[i][3]], 'quadratic']);
-					}
-				}
-				else
-				{
-					if(plist[plist.length-1][1].toString() != teethPos[i][teethList[i][3]].toString() )
-					{
-						plist.push([ plist[plist.length-1][1], teethPos[i][teethList[i][3]], 'quadratic']);
-					}
+					llist.push([[j, 2-Math.floor(j/8)], [j, 1+Math.floor(j/8)], 'L']);
 				}
 			}
 			count += 1;
 		}
 	}
-	plist.push([plist[plist.length-1][1], firstPoint, 'quadratic']);
-	/*for(var i = 0; i < plist.length; i++)
-	{
-		if((plist[i][0][0]-centerX)*(plist[i][1][0] - centerX) < 0)
-		{
-			var p1 = [(plist[i][0][0]+centerX)/2, (plist[i][0][1]+centerY)/2];
-			var p2 = [(plist[i][1][0]+centerX)/2, (plist[i][1][1]+centerY)/2];
-			var pc = [centerX, Math.min(plist[i][0][1], plist[i][1][1])];
-			plist.splice(i, 1, [plist[i][0], pc, p1], [plist[i][0], pc, p2]);
-		}
-	}*/
+	llist.push([ llist[llist.length-1][1], firstPoint, 'B' ]);
 
-	
+	//根据llist计算plist，格式：[线型，起点坐标，终点坐标， 其他参照点坐标（0或2个）]
+	for(var i = 0; i < llist.length; i++)
+	{
+		if(llist[i][2] == 'L')
+		{
+			plist.push(['Line', teethPos[llist[i][0][0]][llist[i][0][1]], teethPos[llist[i][1][0]][llist[i][1][1]]]);
+		}
+		else
+		{
+			temp = connTwoPoint(llist[i][0], llist[i][1]);
+			for(var j = 0; j < temp.length; j++)
+			{
+				plist.push(temp[j]);
+			}
+		}
+	}
+
 	//读取quadraticTops中的有用信息并删除过期项
 	for(var i = 0; i < quadraticTops.length; i++)
 	{
 		for(var j = 0; j < plist.length; j++)
 		{
-			if(plist[j][2] == 'quadratic' && quadraticTops[i][0].toString() == plist[j][0].toString() && quadraticTops[i][1].toString() == plist[j][1].toString())
+			if(quadraticTops[i][1][0] == plist[j][1][0] && quadraticTops[i][2][0] == plist[j][2][0])
 			{
+				plist[j][1] = quadraticTops[i][1];
 				plist[j][2] = quadraticTops[i][2];
+				plist[j][3] = quadraticTops[i][3];
+				if(plist[j][0] == 'Bezier')
+				{
+					plist[j][4] = quadraticTops[i][4];
+				}
 				break;
 			}
 		}
@@ -297,8 +345,7 @@ function drawConn()
 			quadraticTops.splice(i,1);
 		}
 	}
-	
-	//根据连接体片段绘制整个连接体
+
 	if(count == 1)
 	{
 		return;
@@ -307,98 +354,72 @@ function drawConn()
 	{
 		count = 1;
 		var attrname = 'p'+ count;
-		var attrvaluefirst = {};
-		var attrvalueline = {};
-		var attrvaluequadratic = {};
-		
-		//起始点&第一条线
-		if(plist[0][2] == 'line')
+		var attrvalue = {};
+
+		attrvalue.x1 = plist[0][1][0];
+		attrvalue.y1 = plist[0][1][1];
+
+		for(var i = 0; i < plist.length; i++)
 		{
-			attrvaluefirst.type = 'line';
-			attrvaluefirst.x1 = plist[0][0][0];
-			attrvaluefirst.y1 = plist[0][0][1];
-			attrvaluefirst.x2 = plist[0][1][0];
-			attrvaluefirst.y2 = plist[0][1][1];
-		}
-		else
-		{
-			if(plist[0][2] == 'quadratic')
+			if(plist[i][0] == 'Line')
 			{
-				quadraticTops.push([plist[0][0], plist[0][1], [centerX, centerY]]);
-				attrvaluefirst.cx1 = centerX;
-				attrvaluefirst.cy1 = centerY;
+				attrvalue.type = 'line';
+				attrvalue.x2 = plist[i][2][0];
+				attrvalue.y2 = plist[i][2][1];
 			}
 			else
 			{
-				attrvaluefirst.cx1 = plist[0][2][0];
-				attrvaluefirst.cy1 = plist[0][2][1];
-			}
-			attrvaluefirst.type = 'quadratic';
-			attrvaluefirst.x1 = plist[0][0][0];
-			attrvaluefirst.y1 = plist[0][0][1];
-			attrvaluefirst.x2 = plist[0][1][0];
-			attrvaluefirst.y2 = plist[0][1][1];
-			if(isconnmodify)
-			{
-				ajustObj.x1 = attrvaluefirst.x1;
-				ajustObj.y1 = attrvaluefirst.y1;
-				ajustObj.cx1 = attrvaluefirst.cx1;
-				ajustObj.cy1 = attrvaluefirst.cy1;
-				ajustObj.x2 = attrvaluefirst.x2;
-				ajustObj.y2 = attrvaluefirst.y2;
-				$('canvas').addLayer(ajustObj);
-			}
-		}
-		obj[attrname] = attrvaluefirst;
-		count ++;
-		attrname = 'p'+ count;
-		
-		//循环接续其他连接体片段
-		for(var i = 1; i < plist.length; i++)
-		{
-			if(plist[i][2] == 'line')
-			{
-				attrvalueline.type = 'line';
-				attrvalueline.x2 = plist[i][1][0];
-				attrvalueline.y2 = plist[i][1][1];
-				obj[attrname] = $.extend(true, {}, attrvalueline);
-				count ++;
-				attrname = 'p'+ count;
-			}
-			else
-			{
-				if(plist[i][2] == 'quadratic')
+				var tmpajustObj = $.extend(true, {}, ajustObj);
+				if(plist[i][0] == 'Bezier')
 				{
-					quadraticTops.push([plist[i][0], plist[i][1], [centerX, centerY]]);
-					attrvaluequadratic.cx1 = centerX;
-					attrvaluequadratic.cy1 = centerY;
+					attrvalue.type = 'bezier';
+					attrvalue.x2 = plist[i][2][0];
+					attrvalue.y2 = plist[i][2][1];
+					attrvalue.cx1 = plist[i][3][0];
+					attrvalue.cy1 = plist[i][3][1]; 
+					attrvalue.cx2 = plist[i][4][0];
+					attrvalue.cy2 = plist[i][4][1]; 
+					if(isconnmodify)
+					{
+						tmpajustObj.type = attrvalue.type;
+						tmpajustObj.x2 = attrvalue.x2;
+						tmpajustObj.y2 = attrvalue.y2;
+						tmpajustObj.cx1 = attrvalue.cx1;
+						tmpajustObj.cy1 = attrvalue.cy1;
+						tmpajustObj.cx2 = attrvalue.cx2;
+						tmpajustObj.cy2 = attrvalue.cy2;
+						tmpajustObj.x1 = plist[i][1][0];
+						tmpajustObj.y1 = plist[i][1][1];
+						$('canvas').addLayer(tmpajustObj);
+					}
 				}
 				else
 				{
-					attrvaluequadratic.cx1 = plist[i][2][0];
-					attrvaluequadratic.cy1 = plist[i][2][1];
-				}
-				attrvaluequadratic.type = 'quadratic';
-				attrvaluequadratic.x2 = plist[i][1][0];
-				attrvaluequadratic.y2 = plist[i][1][1];
-				if(isconnmodify)
-				{
-					ajustObj.x1 = plist[i][0][0];
-					ajustObj.y1 = plist[i][0][1];
-					ajustObj.cx1 = attrvaluequadratic.cx1;
-					ajustObj.cy1 = attrvaluequadratic.cy1;
-					ajustObj.x2 = attrvaluequadratic.x2;
-					ajustObj.y2 = attrvaluequadratic.y2;
-					$('canvas').addLayer(ajustObj);
+					attrvalue.type = 'quadratic';
+					attrvalue.x2 = plist[i][2][0];
+					attrvalue.y2 = plist[i][2][1];
+					attrvalue.cx1 = plist[i][3][0];
+					attrvalue.cy1 = plist[i][3][1]; 
+					if(isconnmodify)
+					{
+						tmpajustObj.type = attrvalue.type;
+						tmpajustObj.x2 = attrvalue.x2;
+						tmpajustObj.y2 = attrvalue.y2;
+						tmpajustObj.cx1 = attrvalue.cx1;
+						tmpajustObj.cy1 = attrvalue.cy1;
+						tmpajustObj.x1 = plist[i][1][0];
+						tmpajustObj.y1 = plist[i][1][1];
+						$('canvas').addLayer(tmpajustObj);
+					}
 				}
 				
-				obj[attrname] = $.extend(true, {}, attrvaluequadratic);
-				count ++;
-				attrname = 'p'+ count;
 			}
+			
+			obj[attrname] = $.extend(true, {}, attrvalue);
+			count ++;
+			attrname = 'p'+ count;
+			attrvalue = {};
 		}
-		
-		//绘制最终的连接体路径obj
 		$('canvas').addLayer(obj);
 		var layers = $('canvas').getLayers();
 		var temp = layers[layers.length-1];
@@ -409,8 +430,10 @@ function drawConn()
 		layers[0] = temp;
 		$('canvas').drawLayers();
 	}
-	
+
 }
+
+
 
 //绘制基托
 function drawBase(begin, end, type, istmp)
@@ -866,6 +889,10 @@ c.addEventListener("mousedown", function (evt)
 			}
 			storeChange('teethList');
 		}
+		else if(state == -1)
+		{
+			currentMousePos = getMousePos(c, evt);
+		}
 	}
 	
 	//输出点击坐标
@@ -1041,6 +1068,7 @@ function dispConn(mod)
 	{
 		isconndisped = true;
 		isconnmodify = mod;
+		state = -1;
 	}
 	else
 	{
@@ -1054,6 +1082,7 @@ function modfconnconf()
 {
 	isconndisped = true;
 	isconnmodify = false;
+	state = 0;
 	confset();
 }
 
@@ -1156,7 +1185,7 @@ function loadteethmap()
 	});*/
 	
 	//显示所有标识点
-	for(var i = 0; i < 32; i++)
+	/*for(var i = 0; i < 32; i++)
 	{
 		for(var j = 0; j < 11; j++)
 		{
@@ -1168,7 +1197,7 @@ function loadteethmap()
 			  layer: true,
 			});
 		}
-	}
+	}*/
 
   //绘制缺失、支托
   for(var i=0; i<32;i++)
@@ -1263,7 +1292,49 @@ function deepCopy(arr)
 	return tmp;
 }
 
+//计算连接体中两点间的相连方式
+function connTwoPoint(pos1, pos2)
+{
+	var p1 = teethPos[pos1[0]][pos1[1]];
+	var p2 = teethPos[pos2[0]][pos2[1]];
+	var midp1 = getMidPoint(pos1[0], pos1[1]);
+	var midp2 = getMidPoint(pos2[0], pos2[1]);
+	var llist = [];
+	if((p1[0]-centerX)*(p2[0]-centerX) >= 0)
+	{
+		return [['Bezier', p1, p2, [(p1[0]+midp1[0])/2, (p1[1]+midp1[1])/2], [(p2[0]+midp2[0])/2, (p2[1]+midp2[1])/2]]];
+	}
+	else
+	{
+		var cPoint = [centerX, (midp1[1]+midp2[1])/2];
+		if(Math.abs(midp1[1]-midp2[1]) > 20)
+		{
+			var temp = [];
+			var tp0 = [(p1[0]+cPoint[0])/2, (p1[1]+cPoint[1])/2];
+			var tp1 = [(3*p1[0]+midp1[0])/4, (3*p1[1]+midp1[1])/4];
+			var tp2 = [(cPoint[1]-tp0[1])*(tp0[0]-tp1[0])/(tp0[1]-tp1[1])+tp0[0], cPoint[1]];
+			temp.push(['Bezier', p1, cPoint, tp1, tp2]);
+			tp0 = [(p2[0]+cPoint[0])/2, (p2[1]+cPoint[1])/2];
+			tp2 = [(3*p2[0]+midp2[0])/4, (3*p2[1]+midp2[1])/4];
+			tp1 = [(cPoint[1]-tp0[1])*(tp0[0]-tp2[0])/(tp0[1]-tp2[1])+tp0[0], cPoint[1]];
+			temp.push(['Bezier', cPoint, p2, tp1, tp2]);
+			return temp;
+		}
+		else
+		{
+			return [['Quadratic', p1, p2, cPoint]];
+		}
+	}
+}
 
+//计算牙列垂线与上颚中垂线的交点
+function getMidPoint(tnum, pos)
+{
+	var x = centerX;
+	var k = (teethPos[tnum][1][0] - teethPos[tnum][2][0])/(teethPos[tnum][2][1] - teethPos[tnum][1][1]);
+	var y = k*(x - teethPos[tnum][pos][0])+teethPos[tnum][pos][1];
+	return [x, y];
+}
 
 
 
