@@ -94,7 +94,7 @@ for(var i = 0; i < 32; i++)
 }
 
 //存放当前连接体片段中各二次曲线的顶点
-var quadraticTops = [[[0,0],[0,0],[0,0]]];
+var quadraticTops = [];
 
 //操作队列
 var actionList = [];
@@ -169,7 +169,7 @@ function drawConn(type)
 				if(dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2) < mindis)
 				{
 					mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2);
-					layer.mp = 3;
+					layer.mp = 4;
 				}
 				if(dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2) < mindis)
 				{
@@ -185,7 +185,6 @@ function drawConn(type)
 		},
 		handlestop: function(layer) {
 			// code to run while resizing stops
-			state = 0;
 			var i;
 			for(i = 0; i < quadraticTops.length; i++)
 			{
@@ -889,10 +888,6 @@ c.addEventListener("mousedown", function (evt)
 			}
 			storeChange('teethList');
 		}
-		else if(state == -1)
-		{
-			currentMousePos = getMousePos(c, evt);
-		}
 	}
 	
 	//输出点击坐标
@@ -965,13 +960,13 @@ c.addEventListener("mousemove", function (evt)
 			drawsupport(current, 2, true);
 		}
 	}
-	
 
 }, false); 
 
 //事件：鼠标抬起
 c.addEventListener("mouseup", function (evt) 
 {   
+	currentMousePos = getMousePos(c, evt);
 	if(evt.button == 0)
 	{
 		end = current;
@@ -1002,10 +997,6 @@ c.addEventListener("mouseup", function (evt)
 				teethList[i][1] = state%10;
 			}
 			storeChange('teethList');
-		}
-		else if(state == -1)
-		{
-			currentMousePos = getMousePos(c, evt);
 		}
 		begin = end = current = -1;
 		redrawall();
@@ -1062,27 +1053,43 @@ function supportSelected()
 }
 
 //切换状态：显示/隐藏连接体
-function dispConn(mod)
+function dispConn()
 {
-	if(mod)
+	if(isconndisped)
 	{
-		isconndisped = true;
-		isconnmodify = mod;
-		state = -1;
+		isconndisped = false;
+		$('#conn').val('显示连接体');
+		$('#conn').removeClass("red_btn");
+		$('#conn').addClass("green_btn");
 	}
 	else
 	{
-		isconndisped = !isconndisped;
+		isconndisped = true;
+		$('#conn').val('隐藏连接体');
+		$('#conn').removeClass("green_btn");
+		$('#conn').addClass("red_btn");
 	}
 	confset();
 }
 
 //切换状态：连接体调整确认
-function modfconnconf()
+function modfConn()
 {
 	isconndisped = true;
-	isconnmodify = false;
-	state = 0;
+	if(!isconnmodify)
+	{
+		isconnmodify = true;
+		$('#modfconn').val('确认调整');
+		$('#modfconn').removeClass("green_btn");
+		$('#modfconn').addClass("red_btn");
+	}
+	else
+	{
+		isconnmodify = false;
+		$('#modfconn').val('调整连接体');
+		$('#modfconn').removeClass("red_btn");
+		$('#modfconn').addClass("green_btn");
+	}
 	confset();
 }
 
