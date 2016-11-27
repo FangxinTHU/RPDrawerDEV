@@ -72,6 +72,9 @@ var current = -1;
 //当前鼠标位置
 var currentMousePos = [0,0];
 
+//拖拽点距文本框左上角的相对位移
+var measure = [0,0];
+
 //上颌中心点坐标
 var centerX = 197;
 var centerY = 171;
@@ -90,8 +93,10 @@ var selectList = new Array();
 var teethList = new Array();
 for(var i = 0; i < 32; i++)
 {
-  teethList.push([0, 0, 0, 0]);
+	teethList.push([0, 0, 0, 0]);
 }
+teethList[0][0] = teethList[15][0] = teethList[16][0] = teethList[31][0] = 2;
+
 
 //存放当前连接体片段中各二次曲线的顶点
 var quadraticTops = [];
@@ -103,9 +108,22 @@ var LastTeethList = deepCopy(teethList);
 var LastQuadraticTops = deepCopy(quadraticTops);
 
 
+for(var i = 0; i < 32; i++)
+{
+	for(var j = 0; j < 11; j++)
+	{
+		teethPos[i][j][0] += 100;
+		teethPos[i][j][1] += 100;
+	}
+}
+centerX += 100;
+centerY += 100;
+picPosX1 += 100;
+picPosY1 += 100;
+picPosX2 += 100;
+picPosY2 += 100;
 
-
-
+var remarkList = [[[0,0], [90, 100], '这是一个示例示例变长了\n示例变高了', [0,0]]];
 
 /*
 ////////////////////////////////////////
@@ -115,7 +133,9 @@ var LastQuadraticTops = deepCopy(quadraticTops);
 var c=document.getElementById("myCanvas");
 var cxt=c.getContext("2d");
 loadteethmap(teethList);
-
+document.oncontextmenu = function(e){ 
+	return false; 
+};
 
 
 
@@ -125,6 +145,94 @@ loadteethmap(teethList);
 绘图函数：实际在画布上进行绘制的各类函数
 /////////////////////////////////////////
 */
+
+//绘制备注
+function drawRemark(remarkpos, linepos, content, ID)
+{
+	var obj = {
+		type: 'text', 
+		mID: ID, 
+		name: 'tempRemark', 
+		layser: true,
+		fillStyle: '#000000',
+		draggable: true,
+		fontSize: '10pt',
+		fontFamily: 'Trebuchet MS, sans-serif',
+		text: content,
+		x: remarkpos[0], y: remarkpos[1],
+		align: 'left',
+		maxWidth: 50,
+	};
+	$('canvas').addLayer(obj).drawLayers();
+	var twidth = $('canvas').measureText('tempRemark').width;
+	var theight = $('canvas').measureText('tempRemark').height;
+	obj.name = content;
+	obj.x += twidth/2;
+	obj.y += theight/2;
+	obj.dragstart = function(){
+		measure[0] = currentMousePos.x - remarkpos[0];
+		measure[1] = currentMousePos.y - remarkpos[1];
+		$('canvas').removeLayer(content+'line').drawLayers();
+	};
+	obj.dragstop = function(layer) {
+		layer.x = currentMousePos.x-measure[0]+twidth/2;
+		layer.y = currentMousePos.y-measure[1]+theight/2;
+		for(var i = 0; i < remarkList.length; i++)
+		{
+			if(remarkList[i][3].toString() == layer.mID)
+			{
+				remarkList[i][0] = [currentMousePos.x-measure[0], currentMousePos.y-measure[1]];
+			}
+		}
+		confset();
+	};
+	
+	$('canvas').addLayer(obj).removeLayer('tempRemark').drawLayers();
+	var connPoint = {};
+	var k = (linepos[1]-obj.y)/(linepos[0]-obj.x);
+	var kt = theight/twidth;
+	if(k > kt || k < -kt)
+	{
+		connPoint.x = obj.x;
+		if(linepos[1] < obj.y)
+		{
+			connPoint.y = remarkpos[1];
+		}
+		else
+		{
+			connPoint.y = remarkpos[1] + theight;
+		}
+	}
+	else
+	{
+		connPoint.y = obj.y;
+		if(linepos[0] < obj.x)
+		{
+			connPoint.x = remarkpos[0];
+		}
+		else
+		{
+			connPoint.x = remarkpos[0] + twidth;
+		}
+	}
+	
+	$('canvas').drawLine({
+		name: content+'line',
+		layer: true, 
+		visible: true,
+		strokeStyle: '#00000',
+		strokeWidth: 1,
+		x1: connPoint.x, y1: connPoint.y,
+		x2: linepos[0], y2: linepos[1],
+		handle: {
+			type: 'arc',
+			fillStyle: '#fff',
+			strokeStyle: '#c33',
+			strokeWidth: 2,
+			radius: 3
+		}
+	});
+}
 
 //绘制连接体
 function drawConn(type)
@@ -848,6 +956,7 @@ function drawlost(begin, end, temp)
 //事件：鼠标按下
 c.addEventListener("mousedown", function (evt) 
 {
+	currentMousePos = getMousePos(c, evt);
 	if(evt.button == 0)
 	{
 		if(state == 1 || Math.floor(state/10) == 2)
@@ -913,6 +1022,7 @@ c.addEventListener("mousedown", function (evt)
 //事件：鼠标移动
 c.addEventListener("mousemove", function (evt) 
 {
+	currentMousePos = getMousePos(c, evt);
 	if(begin >= 0)
 	{
 		var mousePos = getMousePos(c, evt);
@@ -1001,7 +1111,10 @@ c.addEventListener("mouseup", function (evt)
 		begin = end = current = -1;
 		redrawall();
 	}
-	
+	else if(evt.button == 2)
+	{
+		
+	}
 }, false); 
 
 
@@ -1066,7 +1179,7 @@ function dispConn()
 	{
 		isconndisped = true;
 		$('#conn').val('隐藏连接体');
-		$('#conn').removeClass("green_btn");
+		$('#conn').removeClass("blue_btn");
 		$('#conn').addClass("red_btn");
 	}
 	confset();
@@ -1080,7 +1193,7 @@ function modfConn()
 	{
 		isconnmodify = true;
 		$('#modfconn').val('确认调整');
-		$('#modfconn').removeClass("green_btn");
+		$('#modfconn').removeClass("blue_btn");
 		$('#modfconn').addClass("red_btn");
 	}
 	else
@@ -1110,6 +1223,46 @@ function confset()
 ////////////////////////////////////////////
 */
 
+//设置智齿情况
+function changeWTeeth()
+{
+	var wt = [document.getElementById("wteeth1").checked, document.getElementById("wteeth2").checked, document.getElementById("wteeth3").checked, document.getElementById("wteeth4").checked];
+	if(wt[0])
+	{
+		teethList[0][0] = 0;
+	}
+	else
+	{
+		teethList[0] = [2, 0, 0, 0];
+	}
+	if(wt[1])
+	{
+		teethList[15][0] = 0;
+	}
+	else
+	{
+		teethList[15] = [2, 0, 0, 0];
+	}
+	if(wt[2])
+	{
+		teethList[16][0] = 0;
+	}
+	else
+	{
+		teethList[16] = [2, 0, 0, 0];
+	}
+	if(wt[3])
+	{
+		teethList[31][0] = 0;
+	}
+	else
+	{
+		teethList[31] = [2, 0, 0, 0];
+	}
+	storeChange('teethList');
+	confset();
+}
+
 //根据数组重新绘制图像
 function redrawall()
 {
@@ -1119,23 +1272,46 @@ function redrawall()
 }
 
 //获取相应牙位应该显示的图片
-function getsourceString(i)
+function getsourceString(pos)
 {
 	var sourceString;
-	if(teethList[i][2] != 0)
+	if(pos == 'T')
 	{
-		if((i >= 11 && i <= 20) || (i >= 0 && i <= 4) || (i >= 27 && i <= 31))
+		if(teethList[0][0] == 2 && teethList[15][0] == 2)
 		{
-			sourceString = './img/'+ (i+1) +'-1' + teethList[i][2] + '.png';
+			sourceString = './img/top_teeth_BM.png';
+		}
+		else if(teethList[0][0] != 2 && teethList[15][0] == 2)
+		{
+			sourceString = './img/top_teeth_RM.png';
+		}
+		else if(teethList[0][0] == 2 && teethList[15][0] != 2)
+		{
+			sourceString = './img/top_teeth_LM.png';
 		}
 		else
 		{
-			sourceString = './img/'+ (i+1) +'.png';
+			sourceString = './img/top_teeth.png';
 		}
 	}
 	else
 	{
-		sourceString = './img/'+ (i+1) +'.png';
+		if(teethList[31][0] == 2 && teethList[16][0] == 2)
+		{
+			sourceString = './img/bottom_teeth_BM.png';
+		}
+		else if(teethList[31][0] == 2 && teethList[16][0] != 2)
+		{
+			sourceString = './img/bottom_teeth_RM.png';
+		}
+		else if(teethList[31][0] != 2 && teethList[16][0] == 2)
+		{
+			sourceString = './img/bottom_teeth_LM.png';
+		}
+		else
+		{
+			sourceString = './img/bottom_teeth.png';
+		}
 	}
     return sourceString;
 }
@@ -1162,7 +1338,7 @@ function loadteethmap()
 	//绘制牙齿图像
 	$('canvas').drawImage({
 		layer: true,
-		source: './img/top_teeth.png',
+		source: getsourceString('T'),
 		x: picPosX1, 
 		y: picPosY1,
 		width: 275.56,
@@ -1172,7 +1348,7 @@ function loadteethmap()
 
 	$('canvas').drawImage({
 		layer: true,
-		source: './img/bottom_teeth.png',
+		source: getsourceString('B'),
 		x: picPosX2, 
 		y: picPosY2,
 		width: 275.56,
@@ -1234,6 +1410,11 @@ function loadteethmap()
   {
   	drawConn();
   }
+  
+  for(var i = 0; i < remarkList.length; i++)
+  {
+	  drawRemark(remarkList[i][0], remarkList[i][1], remarkList[i][2], remarkList[i][3]);
+  }
 }
 
 
@@ -1262,11 +1443,14 @@ function findnrst(x, y)
 	var pos = 0;
 	for(var i = 1; i < 32; i++)
 	{
-		var tmp = (teethPos[i][0][0] - x)*(teethPos[i][0][0] - x) + (teethPos[i][0][1] - y)*(teethPos[i][0][1] - y);
-		if(tmp < dis)
+		if(teethList[i][0] != 2)
 		{
-			dis = tmp;
-			pos = i;
+			var tmp = (teethPos[i][0][0] - x)*(teethPos[i][0][0] - x) + (teethPos[i][0][1] - y)*(teethPos[i][0][1] - y);
+			if(tmp < dis)
+			{
+				dis = tmp;
+				pos = i;
+			}
 		}
 	}
 	return pos;

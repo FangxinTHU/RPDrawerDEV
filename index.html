@@ -8,6 +8,13 @@
 	<link rel="shortcut icon" href="favicon.ico" />
 </head>
 <body>
+
+<div id="remarkInput">
+	<textarea rows="3" cols="10" id="remarkText"></textarea><br>
+	<input type="button" class="green_btn" id = "remarkconf" onclick="" value="确认">
+	<input type="button" class="red_btn" id = "remarkgiveup" onclick=";" value="放弃">
+</div>
+
 <div style="margin-top: 50px;margin-left:550px;">
 	<div style="font-family:'微软雅黑';font-size: 35px;">
 		可摘局部义齿设计工具
@@ -16,12 +23,27 @@
 		Tool For Removable Partial Denture Design
 	</div>
 </div>
-<div style="margin:0 auto; margin-top:80px;padding-left: 20px;padding-right: 50px;" >
-	<canvas id="myCanvas" width="450" height="600" style="border:1px solid #c3c3c3;float:left;"></canvas>
+<div style="margin:0 auto; margin-top:80px;padding-left: 20px;padding-right: 20px; min-width:1500px;" >
+	<canvas id="myCanvas" width="700" height="750" style="border:1px solid #c3c3c3;float:left;"></canvas>
 
-	<div id="teethnav" class="pure-form" style="width:60%;float:left;text-align:left;margin-left:20px;">
+	<div id="teethnav" class="pure-form" style="width:750px;float:left;text-align:left;margin-left:20px;">
 		<div class="pure-g">
 		    <div class="pure-u-1"><div style="font-size:20px;margin-bottom:15px;">请选择</div><hr></div>
+			<div class="pure-u-1-2">智齿：&emsp;&emsp;&emsp;&emsp;&emsp;
+				<label for="wteeth1">
+					<input id="wteeth1" type="checkbox" onclick="changeWTeeth();"> 右上
+				</label>
+				<label for="wteeth2">
+					<input id="wteeth2" type="checkbox" onclick="changeWTeeth();"> 左上
+				</label>
+				<label for="wteeth3">
+					<input id="wteeth3" type="checkbox" onclick="changeWTeeth();"> 右下
+				</label>
+				<label for="wteeth4">
+					<input id="wteeth4" type="checkbox" onclick="changeWTeeth();"> 左下
+				</label>
+			</div>
+			<div class="pure-u-1">&emsp;</div>
 			<div class="pure-u-1-2">1.标记缺失牙：&emsp;
 			<input type="button" class="pure-button red_btn" id = "lost" onclick="lostSelected();" value="缺失"></div>
 		    <div class="pure-u-1">&emsp;</div>
@@ -64,9 +86,14 @@
 				</select>
 			</div>
 			<div class="pure-u-1">&emsp;</div>
-			<div class="pure-u-1">5.绘制连接体：&emsp;&emsp;
-			    <input type="button" class = "pure-button green_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
-				<input type="button" class = "pure-button green_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
+			<div class="pure-u-1">5.绘制连接体：&emsp;
+			    <input type="button" class = "pure-button blue_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
+				<input type="button" class = "pure-button blue_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
+			</div>
+			<div class="pure-u-1">&emsp;</div>
+			<div class="pure-u-1">6.备注：&emsp;&emsp;&emsp;&emsp;
+			    <input type="button" class = "pure-button blue_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
+				<input type="button" class = "pure-button blue_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
 			</div>
 			<div class="pure-u-1">&emsp;</div>
 			<div class="pure-u-1">

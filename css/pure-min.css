@@ -24,3 +24,37 @@ Copyright (c) Nicolas Gallagher and Jonathan Neal
     border-radius: 4px;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
+
+.blue_btn
+{
+	background: rgb(66, 184, 221);
+	color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+#remarkInput
+{
+	//display:none;
+	padding: 10px 5px 5px 5px;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	border:1px solid rgb(195, 195, 195);
+	//background-color:rgb(66, 184, 221);
+}
+
+#remarkText
+{
+	margin-bottom: 5px;
+}
+
+#remarkgiveup
+{
+	
+}
+
+#remarkconf
+{
+	
+}
