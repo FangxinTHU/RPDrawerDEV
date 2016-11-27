@@ -72,6 +72,12 @@ var current = -1;
 //当前鼠标位置
 var currentMousePos = [0,0];
 
+//点击右键菜单前记录右键点击位置
+var postRclickpos = [0,0];
+
+//点击右键菜单前记录已经删除的备注条目位置信息
+var remarkData = [];
+
 //拖拽点距文本框左上角的相对位移
 var measure = [0,0];
 
@@ -86,9 +92,6 @@ var picPosY1 = 150;
 var picPosX2 = 200;
 var picPosY2 = 400;
 
-//当前被选中的牙齿列表
-var selectList = new Array();
-
 //存放牙齿详细信息的矩阵
 var teethList = new Array();
 for(var i = 0; i < 32; i++)
@@ -98,7 +101,7 @@ for(var i = 0; i < 32; i++)
 teethList[0][0] = teethList[15][0] = teethList[16][0] = teethList[31][0] = 2;
 
 
-//存放当前连接体片段中各二次曲线的顶点
+//存放当前连接体片段中各曲线的顶点
 var quadraticTops = [];
 
 //操作队列
@@ -107,7 +110,10 @@ var actionCursor = -1;
 var LastTeethList = deepCopy(teethList);
 var LastQuadraticTops = deepCopy(quadraticTops);
 
+//存放备注列表
+var remarkList = [];
 
+//画布扩大后的临时处理
 for(var i = 0; i < 32; i++)
 {
 	for(var j = 0; j < 11; j++)
@@ -123,7 +129,7 @@ picPosY1 += 100;
 picPosX2 += 100;
 picPosY2 += 100;
 
-var remarkList = [[[0,0], [90, 100], '这是一个示例示例变长了\n示例变高了', [0,0]]];
+
 
 /*
 ////////////////////////////////////////
@@ -147,13 +153,12 @@ document.oncontextmenu = function(e){
 */
 
 //绘制备注
-function drawRemark(remarkpos, linepos, content, ID)
+function drawRemark(ID, remarkpos, linepos, content)
 {
 	var obj = {
 		type: 'text', 
 		mID: ID, 
 		name: 'tempRemark', 
-		layser: true,
 		fillStyle: '#000000',
 		draggable: true,
 		fontSize: '10pt',
@@ -179,9 +184,10 @@ function drawRemark(remarkpos, linepos, content, ID)
 		layer.y = currentMousePos.y-measure[1]+theight/2;
 		for(var i = 0; i < remarkList.length; i++)
 		{
-			if(remarkList[i][3].toString() == layer.mID)
+			if(remarkList[i][0].toString() == layer.mID)
 			{
-				remarkList[i][0] = [currentMousePos.x-measure[0], currentMousePos.y-measure[1]];
+				remarkList[i][1] = [currentMousePos.x-measure[0], currentMousePos.y-measure[1]];
+				remarkList[i][2] = [currentMousePos.x-measure[0]+twidth, currentMousePos.y-measure[1]+theight];
 			}
 		}
 		confset();
@@ -230,6 +236,16 @@ function drawRemark(remarkpos, linepos, content, ID)
 			strokeStyle: '#c33',
 			strokeWidth: 2,
 			radius: 3
+		},
+		handlestop: function(){
+			for(var i = 0; i < remarkList.length; i++)
+			{
+				if(remarkList[i][0].toString() == obj.mID)
+				{
+					remarkList[i][3] = [currentMousePos.x, currentMousePos.y];
+				}
+			}
+			confset();
 		}
 	});
 }
@@ -1113,7 +1129,28 @@ c.addEventListener("mouseup", function (evt)
 	}
 	else if(evt.button == 2)
 	{
-		
+		var i;
+		for(i = 0; i < remarkList.length; i++)
+		{
+			if(currentMousePos.x > remarkList[i][1][0] && currentMousePos.x < remarkList[i][2][0] && currentMousePos.y > remarkList[i][1][1] && currentMousePos.y < remarkList[i][2][1])
+			{
+				$('#newRemark').css("display", "none");
+				$('#editRemark').attr("itemid", i);
+				$('#changeRemark').css("display", "block");
+				$('#changeRemark').css("left", evt.clientX);
+				$('#changeRemark').css("top", evt.clientY);
+				postRclickpos = [currentMousePos.x, currentMousePos.y];
+				break;
+			}
+		}
+		if(i == remarkList.length)
+		{
+			$('#changeRemark').css("display", "none");
+			$('#newRemark').css("display", "block");
+			$('#newRemark').css("left", evt.clientX);
+			$('#newRemark').css("top", evt.clientY);
+			postRclickpos = [currentMousePos.x, currentMousePos.y];
+		}
 	}
 }, false); 
 
@@ -1209,6 +1246,12 @@ function modfConn()
 //恢复初始状态
 function confset()
 {
+	$('#newRemark').css("display", "none");
+	$('#remarkText').val('');
+	$('#remarkInput').css("display", "none");
+	$('#editRemark').attr("itemid", "-1");
+	$('#remarkconf').attr("edit", "false");
+	$('#changeRemark').css("display", "none");
 	redrawall();
 	state = 0;
 	begin = end = current = -1;
@@ -1413,7 +1456,7 @@ function loadteethmap()
   
   for(var i = 0; i < remarkList.length; i++)
   {
-	  drawRemark(remarkList[i][0], remarkList[i][1], remarkList[i][2], remarkList[i][3]);
+	  drawRemark(remarkList[i][0], remarkList[i][1], remarkList[i][3], remarkList[i][4]);
   }
 }
 
@@ -1649,4 +1692,71 @@ function redo()
 	}
 	actionCursor++;
 	redrawall();
+}
+
+
+//备注绘制部分
+function setNewRemark()
+{
+	$('#remarkInput').css("display","block");
+	var left = c.getBoundingClientRect().left + postRclickpos[0];
+	var top = c.getBoundingClientRect().top + postRclickpos[1];
+	$('#remarkInput').css("left",left);
+	$('#remarkInput').css("top",top);
+	$('#newRemark').css("display", "none");
+}
+
+//新建一个备注
+function confNewRemark()
+{
+	var edit = $('#remarkconf').attr("edit");
+	var text = $('#remarkText').val();
+	var obj = {
+		type: 'text', 
+		name: 'tempRemark', 
+		fontSize: '10pt',
+		fontFamily: 'Trebuchet MS, sans-serif',
+		text: text,
+		x: 0, y: 0,
+		align: 'left',
+		maxWidth: 50,
+	};
+	$('canvas').addLayer(obj);
+	var twidth = $('canvas').measureText('tempRemark').width;
+	var theight = $('canvas').measureText('tempRemark').height;
+	$('canvas').removeLayer('tempRemark');
+	if(edit=="true")
+	{
+		remarkList.push([remarkData[0], remarkData[1], remarkData[2], remarkData[3], text]);
+	}
+	else
+	{
+		remarkList.push([postRclickpos, [postRclickpos[0], postRclickpos[1]-theight/2], [postRclickpos[0]+twidth, postRclickpos[1]+theight/2], postRclickpos, text]);
+	}
+	confset();
+}
+
+//更改一个备注
+function editRemark()
+{
+	var id = parseInt($('#editRemark').attr("itemid"));
+	remarkData = deepCopy(remarkList[id]);
+	remarkList.splice(id, 1);
+	confset();
+	var left = c.getBoundingClientRect().left + remarkData[1][0];
+	var top = c.getBoundingClientRect().top + remarkData[1][1];
+	$('#remarkInput').css("display","block");
+	$('#remarkInput').css("left",left);
+	$('#remarkInput').css("top",top);
+	$('#changeRemark').css("display", "none");
+	$('#remarkText').val(remarkData[4]);
+	$('#remarkconf').attr("edit", "true");
+}
+
+//删除一个备注
+function deleteRemark()
+{
+	var id = parseInt($('#editRemark').attr("itemid"));
+	remarkList.splice(id, 1);
+	confset();
 }

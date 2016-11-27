@@ -35,13 +35,12 @@ Copyright (c) Nicolas Gallagher and Jonathan Neal
 
 #remarkInput
 {
-	//display:none;
+	display:none;
 	padding: 10px 5px 5px 5px;
 	position: absolute;
 	left: 0px;
 	top: 0px;
 	border:1px solid rgb(195, 195, 195);
-	//background-color:rgb(66, 184, 221);
 }
 
 #remarkText
@@ -49,12 +48,18 @@ Copyright (c) Nicolas Gallagher and Jonathan Neal
 	margin-bottom: 5px;
 }
 
-#remarkgiveup
+#newRemark
 {
-	
+	display: none;
+	position: absolute;
+	left: 0px;
+	top: 0px;
 }
 
-#remarkconf
+#changeRemark
 {
-	
+	display: none;
+	position: absolute;
+	left: 0px;
+	top: 0px;
 }

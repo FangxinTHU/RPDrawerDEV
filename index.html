@@ -11,8 +11,21 @@
 
 <div id="remarkInput">
 	<textarea rows="3" cols="10" id="remarkText"></textarea><br>
-	<input type="button" class="green_btn" id = "remarkconf" onclick="" value="确认">
-	<input type="button" class="red_btn" id = "remarkgiveup" onclick=";" value="放弃">
+	<input type="button" class="green_btn" id = "remarkconf" edit="false" onclick="confNewRemark()" value="确认">
+	<input type="button" class="red_btn" id = "remarkgiveup" onclick="confset();" value="放弃">
+</div>
+
+<div id="newRemark">
+	<ul>
+		<li onclick="setNewRemark();" style="list-style:none;cursor:pointer;border:1px solid rgb(195, 195, 195);">新建标注</li>
+	</ul>
+</div>
+
+<div id="changeRemark">
+	<ul>
+		<li id="editRemark" onclick="editRemark();" itemid = "-1" style="list-style:none;cursor:pointer;border:1px solid rgb(195, 195, 195);">编辑标注</li>
+		<li id="deleteRemark" onclick="deleteRemark();" itemid = "-1" style="list-style:none;cursor:pointer;border:1px solid rgb(195, 195, 195);">删除标注</li>
+	</ul>
 </div>
 
 <div style="margin-top: 50px;margin-left:550px;">
@@ -87,11 +100,6 @@
 			</div>
 			<div class="pure-u-1">&emsp;</div>
 			<div class="pure-u-1">5.绘制连接体：&emsp;
-			    <input type="button" class = "pure-button blue_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
-				<input type="button" class = "pure-button blue_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
-			</div>
-			<div class="pure-u-1">&emsp;</div>
-			<div class="pure-u-1">6.备注：&emsp;&emsp;&emsp;&emsp;
 			    <input type="button" class = "pure-button blue_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
 				<input type="button" class = "pure-button blue_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
 			</div>
