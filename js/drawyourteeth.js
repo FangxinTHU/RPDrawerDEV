@@ -1137,8 +1137,8 @@ c.addEventListener("mouseup", function (evt)
 				$('#newRemark').css("display", "none");
 				$('#editRemark').attr("itemid", i);
 				$('#changeRemark').css("display", "block");
-				$('#changeRemark').css("left", evt.clientX);
-				$('#changeRemark').css("top", evt.clientY);
+				$('#changeRemark').css("left", evt.pageX);
+				$('#changeRemark').css("top", evt.pageY);
 				postRclickpos = [currentMousePos.x, currentMousePos.y];
 				break;
 			}
@@ -1147,8 +1147,8 @@ c.addEventListener("mouseup", function (evt)
 		{
 			$('#changeRemark').css("display", "none");
 			$('#newRemark').css("display", "block");
-			$('#newRemark').css("left", evt.clientX);
-			$('#newRemark').css("top", evt.clientY);
+			$('#newRemark').css("left", evt.pageX);
+			$('#newRemark').css("top", evt.pageY);
 			postRclickpos = [currentMousePos.x, currentMousePos.y];
 		}
 	}
@@ -1474,8 +1474,8 @@ function loadteethmap()
 function getMousePos(canvas, evt) {   
     var rect = canvas.getBoundingClientRect();   
     return {   
-        x: evt.clientX - rect.left,   
-        y: evt.clientY - rect.top   
+        x: evt.pageX - rect.left,   
+        y: evt.pageY - rect.top   
     };   
 }
 
