@@ -167,6 +167,7 @@ function drawRemark(ID, remarkpos, linepos, content)
 		x: remarkpos[0], y: remarkpos[1],
 		align: 'left',
 		maxWidth: 50,
+		rtclick: false
 	};
 	$('canvas').addLayer(obj).drawLayers();
 	var twidth = $('canvas').measureText('tempRemark').width;
@@ -174,23 +175,31 @@ function drawRemark(ID, remarkpos, linepos, content)
 	obj.name = content;
 	obj.x += twidth/2;
 	obj.y += theight/2;
-	obj.dragstart = function(){
+	obj.dragstart = function(layer){
+		if(event.button == 2)
+		{
+			layer.rtclick = true;
+			return;
+		}
 		measure[0] = currentMousePos.x - remarkpos[0];
 		measure[1] = currentMousePos.y - remarkpos[1];
 		$('canvas').removeLayer(content+'line').drawLayers();
 	};
 	obj.dragstop = function(layer) {
-		layer.x = currentMousePos.x-measure[0]+twidth/2;
-		layer.y = currentMousePos.y-measure[1]+theight/2;
-		for(var i = 0; i < remarkList.length; i++)
+		if(!layer.rtclick)
 		{
-			if(remarkList[i][0].toString() == layer.mID)
+			layer.x = currentMousePos.x-measure[0]+twidth/2;
+			layer.y = currentMousePos.y-measure[1]+theight/2;
+			for(var i = 0; i < remarkList.length; i++)
 			{
-				remarkList[i][1] = [currentMousePos.x-measure[0], currentMousePos.y-measure[1]];
-				remarkList[i][2] = [currentMousePos.x-measure[0]+twidth, currentMousePos.y-measure[1]+theight];
+				if(remarkList[i][0].toString() == layer.mID)
+				{
+					remarkList[i][1] = [currentMousePos.x-measure[0], currentMousePos.y-measure[1]];
+					remarkList[i][2] = [currentMousePos.x-measure[0]+twidth, currentMousePos.y-measure[1]+theight];
+				}
 			}
+			confset();
 		}
-		confset();
 	};
 	
 	$('canvas').addLayer(obj).removeLayer('tempRemark').drawLayers();
@@ -1137,8 +1146,8 @@ c.addEventListener("mouseup", function (evt)
 				$('#newRemark').css("display", "none");
 				$('#editRemark').attr("itemid", i);
 				$('#changeRemark').css("display", "block");
-				$('#changeRemark').css("left", evt.pageX);
-				$('#changeRemark').css("top", evt.pageY);
+				$('#changeRemark').css("left", evt.clientX + $(document).scrollLeft());
+				$('#changeRemark').css("top", evt.clientY + $(document).scrollTop());
 				postRclickpos = [currentMousePos.x, currentMousePos.y];
 				break;
 			}
@@ -1147,8 +1156,8 @@ c.addEventListener("mouseup", function (evt)
 		{
 			$('#changeRemark').css("display", "none");
 			$('#newRemark').css("display", "block");
-			$('#newRemark').css("left", evt.pageX);
-			$('#newRemark').css("top", evt.pageY);
+			$('#newRemark').css("left", evt.clientX + $(document).scrollLeft());
+			$('#newRemark').css("top", evt.clientY + $(document).scrollTop());
 			postRclickpos = [currentMousePos.x, currentMousePos.y];
 		}
 	}
@@ -1474,8 +1483,8 @@ function loadteethmap()
 function getMousePos(canvas, evt) {   
     var rect = canvas.getBoundingClientRect();   
     return {   
-        x: evt.pageX - rect.left,   
-        y: evt.pageY - rect.top   
+        x: evt.clientX - rect.left,   
+        y: evt.clientY - rect.top   
     };   
 }
 
@@ -1699,8 +1708,8 @@ function redo()
 function setNewRemark()
 {
 	$('#remarkInput').css("display","block");
-	var left = c.getBoundingClientRect().left + postRclickpos[0];
-	var top = c.getBoundingClientRect().top + postRclickpos[1];
+	var left = c.getBoundingClientRect().left + $(document).scrollLeft() + postRclickpos[0];
+	var top = c.getBoundingClientRect().top + $(document).scrollTop() + postRclickpos[1];
 	$('#remarkInput').css("left",left);
 	$('#remarkInput').css("top",top);
 	$('#newRemark').css("display", "none");
@@ -1743,8 +1752,8 @@ function editRemark()
 	remarkData = deepCopy(remarkList[id]);
 	remarkList.splice(id, 1);
 	confset();
-	var left = c.getBoundingClientRect().left + remarkData[1][0];
-	var top = c.getBoundingClientRect().top + remarkData[1][1];
+	var left = c.getBoundingClientRect().left + $(document).scrollLeft() + remarkData[1][0];
+	var top = c.getBoundingClientRect().top + $(document).scrollTop() + remarkData[1][1];
 	$('#remarkInput').css("display","block");
 	$('#remarkInput').css("left",left);
 	$('#remarkInput').css("top",top);
