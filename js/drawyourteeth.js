@@ -289,11 +289,13 @@ function drawConn(type)
 			strokeWidth: 2,
 			radius: 3
 		},
-		guide: {
+		/*guide: {
 			strokeStyle: '#c33',
 			strokeWidth: 1
-		},
+		},*/
 		mp: 3,
+		px: 0,
+		py: 0,
 		handlestart: function(layer) {
 			// code to run when resizing starts
 			if(layer.type == 'bezier')
@@ -314,6 +316,10 @@ function drawConn(type)
 					mindis = dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1);
 					layer.mp = 1;
 				}
+				layer.px1 = layer.x1;
+				layer.py1 = layer.y1;
+				layer.px2 = layer.x2;
+				layer.py2 = layer.y2;
 			}
 		},
 		handlestop: function(layer) {
@@ -321,7 +327,7 @@ function drawConn(type)
 			var i;
 			for(i = 0; i < quadraticTops.length; i++)
 			{
-				if(quadraticTops[i][1].toString() == [layer.x1, layer.y1].toString() && quadraticTops[i][2].toString() == [layer.x2, layer.y2].toString() )
+				if(quadraticTops[i][1][0] == layer.px1 && quadraticTops[i][2][0] == layer.px2 )
 				{
 					if(layer.mp > 2)
 					{
@@ -342,10 +348,10 @@ function drawConn(type)
 				var temp = [];
 				if(layer.type =='bezier')
 				{
-					temp = ['Bezier', [layer.x1, layer.y1], [layer.x2, layer.y2], [layer.cx1, layer.cy1], [layer.cx2, layer.cy2]];
+					temp = ['Bezier', [layer.px1, layer.py1], [layer.px2, layer.py2], [layer.cx1, layer.cy1], [layer.cx2, layer.cy2]];
 					if(layer.mp == 1)
 					{
-						if(layer.x1 == centerX)
+						if(layer.px1 == centerX)
 						{
 							temp[layer.mp][0] = centerX;
 							temp[layer.mp][1] = currentMousePos.y;
@@ -353,7 +359,7 @@ function drawConn(type)
 					}
 					else if(layer.mp == 2)
 					{
-						if(layer.x2 == centerX)
+						if(layer.px2 == centerX)
 						{
 							temp[layer.mp][0] = centerX;
 							temp[layer.mp][1] = currentMousePos.y;
@@ -462,6 +468,18 @@ function drawConn(type)
 		{
 			if(quadraticTops[i][1][0] == plist[j][1][0] && quadraticTops[i][2][0] == plist[j][2][0])
 			{
+				var k;
+				for(k = 0; k < plist.length; k++)
+				{
+					if(plist[k][1].toString() == plist[j][2].toString())
+					{
+						plist[k][1] = deepCopy(quadraticTops[i][2]);
+					}
+					if(plist[k][2].toString() == plist[j][1].toString())
+					{
+						plist[k][2] = deepCopy(quadraticTops[i][1]);
+					}
+				}
 				plist[j][1] = quadraticTops[i][1];
 				plist[j][2] = quadraticTops[i][2];
 				plist[j][3] = quadraticTops[i][3];
@@ -469,6 +487,7 @@ function drawConn(type)
 				{
 					plist[j][4] = quadraticTops[i][4];
 				}
+				
 				break;
 			}
 		}
@@ -1177,43 +1196,67 @@ c.addEventListener("mouseup", function (evt)
 function lostSelected()
 {
 	//标记缺失状态：1
-	isconndisped = false;
 	confset();
+	isconndisped = false;
+	$('#conn').val('显示连接体');
+	$('#conn').removeClass("red_btn");
+	$('#conn').addClass("green_btn");
 	state = 1;
 }
 
 //切换状态：基托选择
 function baseSelected()
 {
-	isconndisped = false;
+	var base = $('#base').val();
 	confset();
-	state = parseInt($('#base').val());
+	isconndisped = false;
+	$('#conn').val('显示连接体');
+	$('#conn').removeClass("red_btn");
+	$('#conn').addClass("green_btn");
+	$('#base').val(base);
+	state = parseInt(base);
 }
 
 //切换状态：卡环选择
 function claspSelected()
 {
-	isconndisped = false;
+	var clasptype = $('#clasptype').val();
+	var clasppos = $('#clasppos').val();
+	var clasplength = $('#clasplength').val();
 	confset();
+	isconndisped = false;
+	$('#conn').val('显示连接体');
+	$('#conn').removeClass("red_btn");
+	$('#conn').addClass("green_btn");
+	$('#clasptype').val(clasptype);
+	$('#clasppos').val(clasppos);
+	$('#clasplength').val(clasplength);
 	//标记卡环选择状态：3
-	if(parseInt($('#clasptype').val())*parseInt($('#clasppos').val())*parseInt($('#clasplength').val()) != 0)
+	if(parseInt(clasptype)*parseInt(clasppos)*parseInt(clasplength) != 0)
 	{
-		state = 3*1000 + parseInt($('#clasptype').val())*100 + parseInt($('#clasppos').val())*10 + parseInt($('#clasplength').val());
+		state = 3*1000 + parseInt(clasptype)*100 + parseInt(clasppos)*10 + parseInt(clasplength);
 	}
 }
 
 //切换状态：支托选择
 function supportSelected()
 {
-	isconndisped = false;
+	
+	var support = $('#support').val();
 	confset();
+	isconndisped = false;
+	$('#conn').val('显示连接体');
+	$('#conn').removeClass("red_btn");
+	$('#conn').addClass("green_btn");
 	//标记卡环选择状态：4
-	state = parseInt($('#support').val());
+	$('#support').val(support);
+	state = parseInt(support);
 }
 
 //切换状态：显示/隐藏连接体
 function dispConn()
 {
+	confset();
 	if(isconndisped)
 	{
 		isconndisped = false;
@@ -1228,13 +1271,16 @@ function dispConn()
 		$('#conn').removeClass("blue_btn");
 		$('#conn').addClass("red_btn");
 	}
-	confset();
 }
 
 //切换状态：连接体调整确认
 function modfConn()
 {
+	confset();
 	isconndisped = true;
+	$('#conn').val('隐藏连接体');
+	$('#conn').removeClass("blue_btn");
+	$('#conn').addClass("red_btn");
 	if(!isconnmodify)
 	{
 		isconnmodify = true;
@@ -1249,18 +1295,23 @@ function modfConn()
 		$('#modfconn').removeClass("red_btn");
 		$('#modfconn').addClass("green_btn");
 	}
-	confset();
 }
 
 //恢复初始状态
 function confset()
 {
+	
 	$('#newRemark').css("display", "none");
 	$('#remarkText').val('');
 	$('#remarkInput').css("display", "none");
 	$('#editRemark').attr("itemid", "-1");
 	$('#remarkconf').attr("edit", "false");
 	$('#changeRemark').css("display", "none");
+	$('#support').val("0");
+	$('#clasptype').val("0");
+	$('#clasppos').val("0");
+	$('#clasplength').val("0");
+	$('#base').val("0");
 	redrawall();
 	state = 0;
 	begin = end = current = -1;
@@ -1552,14 +1603,15 @@ function connTwoPoint(pos1, pos2)
 		var cPoint = [centerX, (midp1[1]+midp2[1])/2];
 		if(Math.abs(midp1[1]-midp2[1]) > 20)
 		{
+			
 			var temp = [];
 			var tp0 = [(p1[0]+cPoint[0])/2, (p1[1]+cPoint[1])/2];
 			var tp1 = [(3*p1[0]+midp1[0])/4, (3*p1[1]+midp1[1])/4];
-			var tp2 = [(cPoint[1]-tp0[1])*(tp0[0]-tp1[0])/(tp0[1]-tp1[1])+tp0[0], cPoint[1]];
+			var tp2 = [2*tp0[0] - tp1[0], 2*tp0[1] - tp1[1]];
 			temp.push(['Bezier', p1, cPoint, tp1, tp2]);
 			tp0 = [(p2[0]+cPoint[0])/2, (p2[1]+cPoint[1])/2];
 			tp2 = [(3*p2[0]+midp2[0])/4, (3*p2[1]+midp2[1])/4];
-			tp1 = [(cPoint[1]-tp0[1])*(tp0[0]-tp2[0])/(tp0[1]-tp2[1])+tp0[0], cPoint[1]];
+			tp1 = [2*tp0[0] - tp2[0], 2*tp0[1] - tp2[1]];
 			temp.push(['Bezier', cPoint, p2, tp1, tp2]);
 			return temp;
 		}
