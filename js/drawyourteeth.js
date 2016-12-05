@@ -113,6 +113,9 @@ var LastQuadraticTops = deepCopy(quadraticTops);
 //存放备注列表
 var remarkList = [];
 
+//被调整过的图层编号，以便保留handle
+var adjustIndex = -1;
+
 //画布扩大后的临时处理
 for(var i = 0; i < 32; i++)
 {
@@ -259,6 +262,143 @@ function drawRemark(ID, remarkpos, linepos, content)
 	});
 }
 
+
+//连接体调整图层点击事件的响应函数（绘制用于拖拽调整的紫色图层）
+function clickREP(layer)
+{
+	var guidelinelist = $('canvas').getLayers(function(layer) {
+		return (layer.type == 'line');
+	});
+	var layers = $('canvas').getLayers();
+	for(var i = 0; i < guidelinelist.length; i++)
+	{
+		layers.splice(guidelinelist[i].index, 1);
+	}
+	$('canvas').removeLayerGroup('myConns').drawLayers();
+	var handleajustObj = {};
+	handleajustObj.layer = true;
+	handleajustObj.strokeStyle = '#ED05FC';
+	handleajustObj.strokeWidth = 2;
+	handleajustObj.adjustIndex = layer.index;
+	handleajustObj.rounded = true;
+	handleajustObj.groups = ['myConns'];
+	handleajustObj.handle = {
+		type: 'arc',
+		fillStyle: '#FFFFFF',
+		strokeStyle: '#ED05FC',
+		strokeWidth: 2,
+		radius: 2
+	};
+	handleajustObj.guide = {
+		strokeStyle: '#ED05FC',
+		strokeWidth: 1
+	};
+	handleajustObj.type = layer.type;
+	handleajustObj.x1 = layer.x1;
+	handleajustObj.y1 = layer.y1;
+	handleajustObj.cx1 = layer.cx1;
+	handleajustObj.cy1 = layer.cy1;
+	if(layer.type == 'bezier')
+	{
+		handleajustObj.cx2 = layer.cx2;
+		handleajustObj.cy2 = layer.cy2;
+	}
+	handleajustObj.x2 = layer.x2;
+	handleajustObj.y2 = layer.y2;
+	handleajustObj.mp = 3;
+	handleajustObj.px = 0;
+	handleajustObj.py = 0;
+	handleajustObj.handlestart = function(layer) {
+		// code to run when resizing starts
+		if(layer.type == 'bezier')
+		{
+			var mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx1, layer.cy1);
+			if(dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2) < mindis)
+			{
+				mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2);
+				layer.mp = 4;
+			}
+			if(dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2) < mindis)
+			{
+				mindis = dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2);
+				layer.mp = 2;
+			}
+			if(dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1) < mindis)
+			{
+				mindis = dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1);
+				layer.mp = 1;
+			}
+			layer.px1 = layer.x1;
+			layer.py1 = layer.y1;
+			layer.px2 = layer.x2;
+			layer.py2 = layer.y2;
+		}
+	};
+	handleajustObj.handlestop = function(layer) {
+		// code to run while resizing stops
+		var i;
+		for(i = 0; i < quadraticTops.length; i++)
+		{
+			if(quadraticTops[i][1][0] == layer.px1 && quadraticTops[i][2][0] == layer.px2 )
+			{
+				if(layer.mp > 2)
+				{
+					quadraticTops[i][layer.mp] = [currentMousePos.x, currentMousePos.y];
+				}
+				else
+				{
+					if(quadraticTops[i][layer.mp][0] == centerX)
+					{
+						quadraticTops[i][layer.mp][1] = currentMousePos.y;
+					}
+				}
+				break;
+			}
+		}
+		if(i == quadraticTops.length)
+		{
+			var temp = [];
+			if(layer.type =='bezier')
+			{
+				temp = ['Bezier', [layer.px1, layer.py1], [layer.px2, layer.py2], [layer.cx1, layer.cy1], [layer.cx2, layer.cy2]];
+				if(layer.mp == 1)
+				{
+					if(layer.px1 == centerX)
+					{
+						temp[layer.mp][0] = centerX;
+						temp[layer.mp][1] = currentMousePos.y;
+					}
+				}
+				else if(layer.mp == 2)
+				{
+					if(layer.px2 == centerX)
+					{
+						temp[layer.mp][0] = centerX;
+						temp[layer.mp][1] = currentMousePos.y;
+					}
+				}
+				else
+				{
+					temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
+				}
+			}
+			else
+			{
+				temp = ['Quadratic', [layer.x1, layer.y1], [layer.x2, layer.y2], [layer.cx1, layer.cy1]];
+				if(layer.mp == 3)
+				{
+					temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
+				}
+			}
+			quadraticTops.push(temp);
+		}
+		storeChange('quadraticTops');
+		adjustIndex = layer.adjustIndex;
+		redrawall();
+	};
+	$('canvas').addLayer(handleajustObj).drawLayers();
+}
+
 //绘制连接体
 function drawConn(type)
 {
@@ -278,111 +418,11 @@ function drawConn(type)
 	var count = 0;
 
 	var ajustObj = {
+		layer: true, 
 		strokeStyle: '#c33',
 		strokeWidth: 2,
 		rounded: true,
-		groups: ['myConns'],
-		handle: {
-			type: 'arc',
-			fillStyle: '#fff',
-			strokeStyle: '#c33',
-			strokeWidth: 2,
-			radius: 3
-		},
-		/*guide: {
-			strokeStyle: '#c33',
-			strokeWidth: 1
-		},*/
-		mp: 3,
-		px: 0,
-		py: 0,
-		handlestart: function(layer) {
-			// code to run when resizing starts
-			if(layer.type == 'bezier')
-			{
-				var mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx1, layer.cy1);
-				if(dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2) < mindis)
-				{
-					mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx2, layer.cy2);
-					layer.mp = 4;
-				}
-				if(dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2) < mindis)
-				{
-					mindis = dis(currentMousePos.x, currentMousePos.y, layer.x2, layer.y2);
-					layer.mp = 2;
-				}
-				if(dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1) < mindis)
-				{
-					mindis = dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1);
-					layer.mp = 1;
-				}
-				layer.px1 = layer.x1;
-				layer.py1 = layer.y1;
-				layer.px2 = layer.x2;
-				layer.py2 = layer.y2;
-			}
-		},
-		handlestop: function(layer) {
-			// code to run while resizing stops
-			var i;
-			for(i = 0; i < quadraticTops.length; i++)
-			{
-				if(quadraticTops[i][1][0] == layer.px1 && quadraticTops[i][2][0] == layer.px2 )
-				{
-					if(layer.mp > 2)
-					{
-						quadraticTops[i][layer.mp] = [currentMousePos.x, currentMousePos.y];
-					}
-					else
-					{
-						if(quadraticTops[i][layer.mp][0] == centerX)
-						{
-							quadraticTops[i][layer.mp][1] = currentMousePos.y;
-						}
-					}
-					break;
-				}
-			}
-			if(i == quadraticTops.length)
-			{
-				var temp = [];
-				if(layer.type =='bezier')
-				{
-					temp = ['Bezier', [layer.px1, layer.py1], [layer.px2, layer.py2], [layer.cx1, layer.cy1], [layer.cx2, layer.cy2]];
-					if(layer.mp == 1)
-					{
-						if(layer.px1 == centerX)
-						{
-							temp[layer.mp][0] = centerX;
-							temp[layer.mp][1] = currentMousePos.y;
-						}
-					}
-					else if(layer.mp == 2)
-					{
-						if(layer.px2 == centerX)
-						{
-							temp[layer.mp][0] = centerX;
-							temp[layer.mp][1] = currentMousePos.y;
-						}
-					}
-					else
-					{
-						temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
-					}
-				}
-				else
-				{
-					temp = ['Quadratic', [layer.x1, layer.y1], [layer.x2, layer.y2], [layer.cx1, layer.cy1]];
-					if(layer.mp == 3)
-					{
-						temp[layer.mp] = [currentMousePos.x, currentMousePos.y];
-					}
-				}
-				quadraticTops.push(temp);
-			}
-			storeChange('quadraticTops');
-			redrawall();
-		}
+		click: function(layer){clickREP(layer);}
 	};
 
 
@@ -579,6 +619,13 @@ function drawConn(type)
 			layers[i] = layers[i-1];
 		}
 		layers[0] = temp;
+		for(var i = 0; i < layers.length; i++)
+		{
+			if(layers[i].index == adjustIndex-1)
+			{
+				clickREP(layers[i]);
+			}
+		}
 		$('canvas').drawLayers();
 	}
 
