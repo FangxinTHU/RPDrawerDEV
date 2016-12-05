@@ -1200,7 +1200,7 @@ function lostSelected()
 	isconndisped = false;
 	$('#conn').val('显示连接体');
 	$('#conn').removeClass("red_btn");
-	$('#conn').addClass("green_btn");
+	$('#conn').addClass("blue_btn");
 	state = 1;
 }
 
@@ -1212,7 +1212,7 @@ function baseSelected()
 	isconndisped = false;
 	$('#conn').val('显示连接体');
 	$('#conn').removeClass("red_btn");
-	$('#conn').addClass("green_btn");
+	$('#conn').addClass("blue_btn");
 	$('#base').val(base);
 	state = parseInt(base);
 }
@@ -1227,7 +1227,7 @@ function claspSelected()
 	isconndisped = false;
 	$('#conn').val('显示连接体');
 	$('#conn').removeClass("red_btn");
-	$('#conn').addClass("green_btn");
+	$('#conn').addClass("blue_btn");
 	$('#clasptype').val(clasptype);
 	$('#clasppos').val(clasppos);
 	$('#clasplength').val(clasplength);
@@ -1247,7 +1247,7 @@ function supportSelected()
 	isconndisped = false;
 	$('#conn').val('显示连接体');
 	$('#conn').removeClass("red_btn");
-	$('#conn').addClass("green_btn");
+	$('#conn').addClass("blue_btn");
 	//标记卡环选择状态：4
 	$('#support').val(support);
 	state = parseInt(support);
@@ -1256,13 +1256,13 @@ function supportSelected()
 //切换状态：显示/隐藏连接体
 function dispConn()
 {
-	confset();
+	
 	if(isconndisped)
 	{
 		isconndisped = false;
 		$('#conn').val('显示连接体');
 		$('#conn').removeClass("red_btn");
-		$('#conn').addClass("green_btn");
+		$('#conn').addClass("blue_btn");
 	}
 	else
 	{
@@ -1271,12 +1271,12 @@ function dispConn()
 		$('#conn').removeClass("blue_btn");
 		$('#conn').addClass("red_btn");
 	}
+	confset();
 }
 
 //切换状态：连接体调整确认
 function modfConn()
 {
-	confset();
 	isconndisped = true;
 	$('#conn').val('隐藏连接体');
 	$('#conn').removeClass("blue_btn");
@@ -1293,8 +1293,9 @@ function modfConn()
 		isconnmodify = false;
 		$('#modfconn').val('调整连接体');
 		$('#modfconn').removeClass("red_btn");
-		$('#modfconn').addClass("green_btn");
+		$('#modfconn').addClass("blue_btn");
 	}
+	confset();
 }
 
 //恢复初始状态
