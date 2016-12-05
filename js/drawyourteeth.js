@@ -782,7 +782,7 @@ function drawsupport(current, pos, tmp)
 		var p1 = {
 			type: 'quadratic',
 			x1: teethPos[current][2*pos+3][0], y1: teethPos[current][2*pos+3][1],
-			cx1: teethPos[current][3-pos][0], cy1: teethPos[current][3-pos][1],
+			cx1: teethPos[current][0][0], cy1: teethPos[current][0][1],
 			x2: teethPos[current][2*pos+4][0], y2: teethPos[current][2*pos+4][1]
 		};
 
@@ -826,24 +826,26 @@ function drawclasp(current, pos1, type, pos2, length, tmp)
 {
 	cxt.clearRect(0, 0, c.width, c.height);
 	$('canvas').removeLayer('clasp');
+	$('canvas').removeLayerGroup('claspboard');
 	
 	var obj = {
 		type: 'path',
         layer: true,
-		strokeStyle: '#000000'
+		strokeStyle: '#000000',
+		strokeWidth: 2
 	};
 	if(tmp)
 	{
 		obj.name = 'clasp';
 	}
-	if(type == 1)
+	/* if(type == 1)
 	{
 		obj.strokeWidth = 4;
 	}
 	else
 	{
 		obj.strokeWidth = 2;
-	}
+	} */
 	var pathlist;
 	
 	if(pos1 == 1)
@@ -879,9 +881,12 @@ function drawclasp(current, pos1, type, pos2, length, tmp)
 			else
 				pathlist = [6,4,8,2,7];
 	
+	
+	
 	var count = 1;
 	attrname = 'p'+ count;
 	var tmpobj = {};
+	var tmpboard = {};
 	tmpobj.type = 'quadratic';
 	var cx,cy;
 	var k1, k2;
@@ -896,6 +901,35 @@ function drawclasp(current, pos1, type, pos2, length, tmp)
 		tmpobj.cy1 = cy;
 		tmpobj.x2 = teethPos[current][pathlist[i]][0];
 		tmpobj.y2 = teethPos[current][pathlist[i]][1];
+		
+		if(type == 1)
+		{
+			tempboard = $.extend(true, {}, tmpobj);
+			tempboard.x1 = teethPos[current][pathlist[i-1]][0];
+			tempboard.y1 = teethPos[current][pathlist[i-1]][1];
+			tempboard.layer = true;
+			tempboard.groups = ['claspboard'];
+			tempboard.strokeStyle = '#000000';
+			
+			if(pathlist.length >= 7)
+			{
+				if(i < Math.ceil(pathlist.length/2))
+				{
+					tempboard.strokeWidth = i;
+				}
+				else
+				{
+					tempboard.strokeWidth = pathlist.length - i;
+				}
+			}
+			else
+			{
+				tempboard.strokeWidth = i;
+			}
+			
+			$('canvas').addLayer(tempboard);
+		}
+		
 		if(i == 2)
 		{
 			tmpobj.x1 = teethPos[current][pathlist[1]][0];
@@ -1604,16 +1638,32 @@ function connTwoPoint(pos1, pos2)
 		var cPoint = [centerX, (midp1[1]+midp2[1])/2];
 		if(Math.abs(midp1[1]-midp2[1]) > 20)
 		{
-			
 			var temp = [];
-			var tp0 = [(p1[0]+cPoint[0])/2, (p1[1]+cPoint[1])/2];
-			var tp1 = [(3*p1[0]+midp1[0])/4, (3*p1[1]+midp1[1])/4];
-			var tp2 = [2*tp0[0] - tp1[0], 2*tp0[1] - tp1[1]];
+			var tp1, tp2,tmpx;
+			if(cPoint[1] < p1[1] && cPoint[1] > midp1[1])
+			{
+				tmpx = (cPoint[1]-p1[1])*(p1[0]-midp1[0])/(p1[1]-midp1[1])+p1[0];
+				tp1 = [(p1[0]+tmpx)/2, (p1[1]+cPoint[1])/2];
+				tp2 = [(cPoint[0]+3*tmpx)/4, cPoint[1]];
+			}
+			else
+			{
+				tp1 = [(3*p1[0]+midp1[0])/4, (3*p1[1]+midp1[1])/4];
+				tp2 = [(p1[0]+midp1[0])/2, cPoint[1]];
+			}
 			temp.push(['Bezier', p1, cPoint, tp1, tp2]);
-			tp0 = [(p2[0]+cPoint[0])/2, (p2[1]+cPoint[1])/2];
-			tp2 = [(3*p2[0]+midp2[0])/4, (3*p2[1]+midp2[1])/4];
-			tp1 = [2*tp0[0] - tp2[0], 2*tp0[1] - tp2[1]];
-			temp.push(['Bezier', cPoint, p2, tp1, tp2]);
+			if(cPoint[1] < p2[1] && cPoint[1] > midp2[1])
+			{
+				tmpx = (cPoint[1]-p2[1])*(p2[0]-midp2[0])/(p2[1]-midp2[1])+p2[0];
+				tp1 = [(p2[0]+tmpx)/2, (p2[1]+cPoint[1])/2];
+				tp2 = [(cPoint[0]+3*tmpx)/4, cPoint[1]];
+			}
+			else
+			{
+				tp1 = [(3*p2[0]+midp2[0])/4, (3*p2[1]+midp2[1])/4];
+				tp2 = [(p2[0]+midp2[0])/2, cPoint[1]];
+			}
+			temp.push(['Bezier', cPoint, p2, tp2, tp1]);
 			return temp;
 		}
 		else
