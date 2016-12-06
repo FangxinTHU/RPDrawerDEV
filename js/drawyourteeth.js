@@ -114,7 +114,7 @@ var LastQuadraticTops = deepCopy(quadraticTops);
 var remarkList = [];
 
 //被调整过的图层编号，以便保留handle
-var adjustIndex = -1;
+var adjustIndex = -2;
 
 //画布扩大后的临时处理
 for(var i = 0; i < 32; i++)
@@ -267,7 +267,7 @@ function drawRemark(ID, remarkpos, linepos, content)
 function clickREP(layer)
 {
 	var guidelinelist = $('canvas').getLayers(function(layer) {
-		return (layer.type == 'line');
+		return (layer.type == 'line' && layer.strokeWidth == 1);
 	});
 	var layers = $('canvas').getLayers();
 	for(var i = 0; i < guidelinelist.length; i++)
@@ -276,10 +276,10 @@ function clickREP(layer)
 	}
 	$('canvas').removeLayerGroup('myConns').drawLayers();
 	var handleajustObj = {};
+	adjustIndex = layer.idnum;
 	handleajustObj.layer = true;
 	handleajustObj.strokeStyle = '#ED05FC';
 	handleajustObj.strokeWidth = 2;
-	handleajustObj.adjustIndex = layer.index;
 	handleajustObj.rounded = true;
 	handleajustObj.groups = ['myConns'];
 	handleajustObj.handle = {
@@ -393,10 +393,27 @@ function clickREP(layer)
 			quadraticTops.push(temp);
 		}
 		storeChange('quadraticTops');
-		adjustIndex = layer.adjustIndex;
 		redrawall();
 	};
 	$('canvas').addLayer(handleajustObj).drawLayers();
+}
+
+//绘制连接体的一个部件：连接体在牙列边缘的短粗线
+function drawedgestick(pos)
+{
+	var edgestick = {
+		type: 'line',
+		strokeStyle: '#FF6A6A',
+		strokeWidth: 5,
+		layer: true,
+		groups: ['edgesticks'],
+	};
+	edgestick.x1 = teethPos[pos[0]][pos[1]][0];
+	edgestick.y1 = teethPos[pos[0]][pos[1]][1];
+	var edgestickPoint = getEdgeStickPos(pos, 'long');
+	edgestick.x2 = edgestickPoint[0];
+	edgestick.y2 = edgestickPoint[1];
+	$('canvas').addLayer(edgestick);
 }
 
 //绘制连接体
@@ -413,6 +430,7 @@ function drawConn(type)
 		layer: true,
 		closed: true
 	};
+
 	var firstPoint = [];
 	var pos = 0;
 	var count = 0;
@@ -422,7 +440,10 @@ function drawConn(type)
 		strokeStyle: '#c33',
 		strokeWidth: 2,
 		rounded: true,
-		click: function(layer){clickREP(layer);}
+		idnum:-1,
+		click: function(layer){
+			clickREP(layer);
+		}
 	};
 
 
@@ -493,6 +514,8 @@ function drawConn(type)
 		}
 		else
 		{
+			drawedgestick(llist[i][0]);
+			drawedgestick(llist[i][1]);
 			temp = connTwoPoint(llist[i][0], llist[i][1]);
 			for(var j = 0; j < temp.length; j++)
 			{
@@ -581,6 +604,7 @@ function drawConn(type)
 						tmpajustObj.cy2 = attrvalue.cy2;
 						tmpajustObj.x1 = plist[i][1][0];
 						tmpajustObj.y1 = plist[i][1][1];
+						tmpajustObj.idnum = i;
 						$('canvas').addLayer(tmpajustObj);
 					}
 				}
@@ -593,6 +617,7 @@ function drawConn(type)
 					attrvalue.cy1 = plist[i][3][1]; 
 					if(isconnmodify)
 					{
+						tmpajustObj.idnum = i;
 						tmpajustObj.type = attrvalue.type;
 						tmpajustObj.x2 = attrvalue.x2;
 						tmpajustObj.y2 = attrvalue.y2;
@@ -621,7 +646,7 @@ function drawConn(type)
 		layers[0] = temp;
 		for(var i = 0; i < layers.length; i++)
 		{
-			if(layers[i].index == adjustIndex-1)
+			if(layers[i].idnum == adjustIndex)
 			{
 				clickREP(layers[i]);
 			}
@@ -955,7 +980,10 @@ function drawclasp(current, pos1, type, pos2, length, tmp)
 			tempboard.x1 = teethPos[current][pathlist[i-1]][0];
 			tempboard.y1 = teethPos[current][pathlist[i-1]][1];
 			tempboard.layer = true;
-			tempboard.groups = ['claspboard'];
+			if(tmp)
+			{
+				tempboard.groups = ['claspboard'];
+			}
 			tempboard.strokeStyle = '#000000';
 			
 			if(pathlist.length >= 7)
@@ -1624,9 +1652,9 @@ function getMousePos(canvas, evt) {
 //寻找离特定点最近的牙齿
 function findnrst(x, y)
 {
-	var dis = (teethPos[0][0][0] - x)*(teethPos[0][0][0] - x) + (teethPos[0][0][1] - y)*(teethPos[0][0][1] - y);
-	var pos = 0;
-	for(var i = 1; i < 32; i++)
+	var dis = Number.MAX_VALUE;
+	var pos = -1;
+	for(var i = 0; i < 32; i++)
 	{
 		if(teethList[i][0] != 2)
 		{
@@ -1668,11 +1696,36 @@ function deepCopy(arr)
 	return tmp;
 }
 
+
+//获取连接体边缘的连接点
+function getEdgeStickPos(pos, length)
+{
+	var x1, x2, posbeside, y1, y2;
+	posbeside = pos[0] + (2*Math.floor(pos[0]/8)-1)*(2*pos[1]-3);
+	x1 = teethPos[pos[0]][pos[1]][0];
+	y1 = teethPos[pos[0]][pos[1]][1];
+	if(length == 'long')
+	{
+		x2 = (x1 + 3*(teethPos[pos[0]][4][0] + teethPos[posbeside][4][0])/2)/4;
+		y2 = (y1 + 3*(teethPos[pos[0]][4][1] + teethPos[posbeside][4][1])/2)/4;
+	}
+	else
+	{
+		x2 = (x1 + (teethPos[pos[0]][4][0] + teethPos[posbeside][4][0])/2)/2;
+		y2 = (y1 + (teethPos[pos[0]][4][1] + teethPos[posbeside][4][1])/2)/2;
+	}
+	
+	return([x2, y2]);
+}
+
 //计算连接体中两点间的相连方式
 function connTwoPoint(pos1, pos2)
 {
-	var p1 = teethPos[pos1[0]][pos1[1]];
-	var p2 = teethPos[pos2[0]][pos2[1]];
+	var p1 = getEdgeStickPos(pos1, 'short');
+	var p2 = getEdgeStickPos(pos2, 'short');
+
+	//var p1 = teethPos[pos1[0]][pos1[1]];
+	//var p2 = teethPos[pos2[0]][pos2[1]];
 	var midp1 = getMidPoint(pos1[0], pos1[1]);
 	var midp2 = getMidPoint(pos2[0], pos2[1]);
 	var llist = [];
