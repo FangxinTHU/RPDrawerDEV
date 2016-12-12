@@ -1,11 +1,12 @@
 /**
  * 2016 Xin Fang 
- * version 3.0
+ * version 6.0+
  * V1功能：缺失标记、完整基托、舌侧基托、普通三臂卡环、连接体简单绘制
  * V2功能：连接体抛物线可调整、可撤销/重做（10步）
  * V3：根据新需求，更改牙列图、牙列参照点坐标数据结构，使用新结构、新需求绘制：缺失双线、基托
  * V4：根据新需求，去掉卡环图片，用图形化方式表示支托和卡环
  * V5：根据新需求，重写连接体绘制方法（包括连接体的调整，调整功能有待调试）
+ * V6：新增备注功能，进一步优化连接体绘制规则，微调了卡环和支托形态
  */
 
 
@@ -115,6 +116,9 @@ var remarkList = [];
 
 //被调整过的图层编号，以便保留handle
 var adjustIndex = -2;
+
+//连接体形态标识
+var conntypelist = [false, false, false];
 
 //画布扩大后的临时处理
 for(var i = 0; i < 32; i++)
@@ -445,8 +449,8 @@ function drawConn(type)
 			clickREP(layer);
 		}
 	};
-
-
+	
+	//绘制上牙连接体
 	//计算llist，格式：[起点位置，终点位置，线型]
 	for(var i = 0; i < 16; i++)
 	{
@@ -503,69 +507,67 @@ function drawConn(type)
 			count += 1;
 		}
 	}
-	llist.push([ llist[llist.length-1][1], firstPoint, 'B' ]);
-
-	//根据llist计算plist，格式：[线型，起点坐标，终点坐标， 其他参照点坐标（0或2个）]
-	for(var i = 0; i < llist.length; i++)
+	if(count > 1)
 	{
-		if(llist[i][2] == 'L')
+		llist.push([ llist[llist.length-1][1], firstPoint, 'B' ]);
+
+		//根据llist计算plist，格式：[线型，起点坐标，终点坐标， 其他参照点坐标（0或2个）]
+		for(var i = 0; i < llist.length; i++)
 		{
-			plist.push(['Line', teethPos[llist[i][0][0]][llist[i][0][1]], teethPos[llist[i][1][0]][llist[i][1][1]]]);
-		}
-		else
-		{
-			drawedgestick(llist[i][0]);
-			drawedgestick(llist[i][1]);
-			temp = connTwoPoint(llist[i][0], llist[i][1]);
-			for(var j = 0; j < temp.length; j++)
+			if(llist[i][2] == 'L')
 			{
-				plist.push(temp[j]);
+				plist.push(['Line', teethPos[llist[i][0][0]][llist[i][0][1]], teethPos[llist[i][1][0]][llist[i][1][1]]]);
+			}
+			else
+			{
+				drawedgestick(llist[i][0]);
+				drawedgestick(llist[i][1]);
+				//plist.push(['Line', teethPos[llist[i][0][0]][llist[i][0][1]], getEdgeStickPos(llist[i][0])]);
+				temp = connTwoPoint(llist[i][0], llist[i][1]);
+				for(var j = 0; j < temp.length; j++)
+				{
+					plist.push(temp[j]);
+				}
+				//plist.push(['Line', teethPos[llist[i][1][0]][llist[i][1][1]], getEdgeStickPos(llist[i][1])]);
 			}
 		}
-	}
 
-	//读取quadraticTops中的有用信息并删除过期项
-	for(var i = 0; i < quadraticTops.length; i++)
-	{
-		for(var j = 0; j < plist.length; j++)
+		//读取quadraticTops中的有用信息并删除过期项
+		for(var i = 0; i < quadraticTops.length; i++)
 		{
-			if(quadraticTops[i][1][0] == plist[j][1][0] && quadraticTops[i][2][0] == plist[j][2][0])
+			for(var j = 0; j < plist.length; j++)
 			{
-				var k;
-				for(k = 0; k < plist.length; k++)
+				if(quadraticTops[i][1][0] == plist[j][1][0] && quadraticTops[i][2][0] == plist[j][2][0])
 				{
-					if(plist[k][1].toString() == plist[j][2].toString())
+					var k;
+					for(k = 0; k < plist.length; k++)
 					{
-						plist[k][1] = deepCopy(quadraticTops[i][2]);
+						if(plist[k][1].toString() == plist[j][2].toString())
+						{
+							plist[k][1] = deepCopy(quadraticTops[i][2]);
+						}
+						if(plist[k][2].toString() == plist[j][1].toString())
+						{
+							plist[k][2] = deepCopy(quadraticTops[i][1]);
+						}
 					}
-					if(plist[k][2].toString() == plist[j][1].toString())
+					plist[j][1] = quadraticTops[i][1];
+					plist[j][2] = quadraticTops[i][2];
+					plist[j][3] = quadraticTops[i][3];
+					if(plist[j][0] == 'Bezier')
 					{
-						plist[k][2] = deepCopy(quadraticTops[i][1]);
+						plist[j][4] = quadraticTops[i][4];
 					}
+					
+					break;
 				}
-				plist[j][1] = quadraticTops[i][1];
-				plist[j][2] = quadraticTops[i][2];
-				plist[j][3] = quadraticTops[i][3];
-				if(plist[j][0] == 'Bezier')
-				{
-					plist[j][4] = quadraticTops[i][4];
-				}
-				
-				break;
+			}
+			if(j == plist.length)
+			{
+				quadraticTops.splice(i,1);
 			}
 		}
-		if(j == plist.length)
-		{
-			quadraticTops.splice(i,1);
-		}
-	}
-
-	if(count == 1)
-	{
-		return;
-	}
-	else
-	{
+		
 		count = 1;
 		var attrname = 'p'+ count;
 		var attrvalue = {};
@@ -654,6 +656,197 @@ function drawConn(type)
 		$('canvas').drawLayers();
 	}
 
+	
+	
+	//绘制下牙连接体
+	var obj = {
+		type: 'path',
+		fillStyle: '#FF6A6A',
+		strokeStyle: '#FF6A6A',
+		strokeWidth: 2,
+		layer: true,
+		closed: true,
+		rounded: 10
+	};
+	var botConnBegin = [16, 0];
+	var botConnEnd = [16, 3];
+	for(var i = 16; i < 31; i++)
+	{
+		if(teethList[i][2] > 0 || teethList[i][3] > 0 || (teethList[i][1] > 0 && teethList[i+1][1] == 0))
+		{
+			if(Math.floor(teethList[i][2]/1000) > botConnBegin[1])
+			{
+				botConnBegin = [i, Math.floor(teethList[i][2]/1000)];
+			}
+			if(teethList[i][3] > botConnBegin[1])
+			{
+				botConnBegin = [i, teethList[i][3]];
+			}
+			if(teethList[i][1] > 0 && teethList[i+1][1] == 0)
+			{
+				botConnBegin = [i, 3];
+			}
+			break;
+		}
+	}
+	for(var i = 31; i > 16; i--)
+	{
+		if(teethList[i][2] > 0 || teethList[i][3] > 0 || (teethList[i][1] > 0 && teethList[i-1][1] == 0))
+		{
+			if(Math.floor(teethList[i][2]/1000) < botConnEnd[1] && teethList[i][2] > 0)
+			{
+				botConnEnd = [i, Math.floor(teethList[i][2]/1000)];
+			}
+			if(teethList[i][3] < botConnEnd[1] && teethList[i][3] > 0)
+			{
+				botConnEnd = [i, teethList[i][3]];
+			}
+			if(teethList[i][1] > 0 && teethList[i-1][1] == 0)
+			{
+				botConnEnd = [i, 3];
+			}
+			break;
+		}
+	}
+	if(botConnBegin[0] < botConnEnd[0])
+	{
+		var plist = [];
+		
+		
+		for(var i = botConnEnd[0]-1; i > botConnBegin[0]; i--)
+		{
+			plist.push(teethPos[i][10]);
+		}
+		if(botConnBegin[1] == 3)
+		{
+			plist.push(teethPos[botConnBegin[0]][10]);
+			plist.push([(teethPos[botConnBegin[0]][4][0] + teethPos[botConnBegin[0]][10][0])/2, (teethPos[botConnBegin[0]][4][1] + teethPos[botConnBegin[0]][10][1])/2]);
+		}
+		else
+		{
+			var p1 = getEdgeStickPos(botConnBegin, 'longlong');
+			var p2 = getEdgeStickPos(botConnBegin, 'long');
+			
+			
+			if(botConnBegin[1] == 2)
+			{
+				plist.push(teethPos[botConnBegin[0]][10]);
+				plist.push(p1);
+				plist.push(p2);
+				plist.push([(teethPos[botConnBegin[0]][4][0] + teethPos[botConnBegin[0]][10][0])/2, (teethPos[botConnBegin[0]][4][1] + teethPos[botConnBegin[0]][10][1])/2]);
+				
+			}
+			else
+			{
+				plist.push(p1);
+				plist.push(p2);
+			}
+		}
+		for(var i = botConnBegin[0]+1; i < botConnEnd[0]; i++)
+		{
+			plist.push([(teethPos[i][4][0] + teethPos[i][10][0])/2, (teethPos[i][4][1] + teethPos[i][10][1])/2]);
+		}
+		if(botConnEnd[1] == 3)
+		{
+			plist.push([(teethPos[botConnEnd[0]][4][0] + teethPos[botConnEnd[0]][10][0])/2, (teethPos[botConnEnd[0]][4][1] + teethPos[botConnEnd[0]][10][1])/2]);
+			plist.push(teethPos[botConnEnd[0]][10]);
+		}
+		else
+		{
+			var p1 = getEdgeStickPos(botConnEnd, 'longlong');
+			var p2 = getEdgeStickPos(botConnEnd, 'long');
+			
+			if(botConnEnd[1] == 2)
+			{
+				plist.push([(teethPos[botConnEnd[0]][4][0] + teethPos[botConnEnd[0]][10][0])/2, (teethPos[botConnEnd[0]][4][1] + teethPos[botConnEnd[0]][10][1])/2]);
+				plist.push(p2);
+				plist.push(p1);
+				plist.push(teethPos[botConnEnd[0]][10]);
+			}
+			else
+			{
+				plist.push(p2);
+				plist.push(p1);
+			}
+		}
+		
+		
+		for(var i = 0; i < plist.length; i++)
+		{
+			$('canvas').drawArc({
+			  strokeStyle: '#000',
+			  strokeWidth: 2,
+			  x: plist[i][0], y: plist[i][1],
+			  radius: 2
+			});
+		}
+		
+		var stickpos;
+		for(var i = 16; i < 32; i++)
+		{
+			if(teethList[i][2] != 0)
+			{
+				stickpos = [i, Math.floor(teethList[i][2]/1000)];
+				drawedgestick(stickpos);
+			}
+			if(teethList[i][3] != 0 && teethList[i][3] != Math.floor(teethList[i][2]/1000))
+			{
+				stickpos = [i, teethList[i][3]];
+				drawedgestick(stickpos);
+			}
+		}
+		
+		count = plist.length;
+		var attrname = 'p1';
+		var attrvalue = {};
+		
+		attrvalue.x1 = plist[0][0];
+		attrvalue.y1 = plist[0][1];
+		
+		for(var i = 0; i < count; i++)
+		{
+			k1 = (plist[(count+i+1)%count][1]-plist[(count+i-1)%count][1])/(plist[(count+i+1)%count][0]-plist[(count+i-1)%count][0]);
+			k2 = (plist[(count+i+2)%count][1]-plist[i][1])/(plist[(count+i+2)%count][0]-plist[i][0]);
+			x = (plist[(count+i+1)%count][1]-plist[i][1]-k2*plist[(count+i+1)%count][0]+k1*plist[i][0])/(k1-k2);
+			y = k1*(x-plist[i][0])+plist[i][1];
+			
+			if(Math.abs(plist[i][0] - plist[(count+i+1)%count][0]) > Math.abs(plist[i][1] - plist[(count+i+1)%count][1]))
+			{
+				if(x < Math.min(plist[i][0],plist[(count+i+1)%count][0]) || x > Math.max(plist[i][0],plist[(count+i+1)%count][0]))
+				{
+					x = (plist[i][0]+plist[(count+i+1)%count][0])/2;
+					y = (plist[i][1]+plist[(count+i+1)%count][1])/2;
+				}
+			}
+			else
+			{
+				if( y < Math.min(plist[i][1],plist[(count+i+1)%count][1]) || y > Math.max(plist[i][1],plist[(count+i+1)%count][1]) )
+				{
+					x = (plist[i][0]+plist[(count+i+1)%count][0])/2;
+					y = (plist[i][1]+plist[(count+i+1)%count][1])/2;
+				}
+			}
+			
+			attrname = 'p'+(i+1);
+			attrvalue.cx1 = x;
+			attrvalue.cy1 = y;
+			attrvalue.x2 = plist[(count+i+1)%count][0];
+			attrvalue.y2 = plist[(count+i+1)%count][1];
+			obj[attrname] = $.extend(true, {}, attrvalue);
+			attrvalue = {};
+			attrvalue.type = 'quadratic';
+		}
+		
+		$('canvas').addLayer(obj);
+		var layers = $('canvas').getLayers();
+		var temp = layers[layers.length-1];
+		for(var i = layers.length-1; i > 0; i--)
+		{
+			layers[i] = layers[i-1];
+		}
+		layers[0] = temp;
+		$('canvas').drawLayers();
+	}
 }
 
 
@@ -664,16 +857,38 @@ function drawBase(begin, end, type, istmp)
 	cxt.clearRect(0, 0, c.width, c.height);
 	$('canvas').removeLayer('base').drawLayers();
 
-	if(begin > end)
+	var a = Math.min(begin, end);
+	var b = Math.max(begin, end);
+	
+	if(a < 16 && b > 15)
 	{
-		var temp = begin;
-		begin = end;
-		end = temp;
+		if(a == begin)
+		{
+			if(teethList[15][0] == 2)
+			{
+				b = 14;
+			}
+			else
+			{
+				b = 15;
+			}
+		}
+		else
+		{
+			if(teethList[16][0] == 2)
+			{
+				a = 17;
+			}
+			else
+			{
+				a = 16;
+			}
+		}
 	}
-	if(begin <16 && end > 15)
-	{
-		return;
-	}
+	
+	begin = a;
+	end = b;
+	
 	var plist = [];
 	var ka1,ka2,kb1,kb2;
 	var x,y;
@@ -1033,10 +1248,6 @@ function drawlost(begin, end, temp)
 
 	var a = Math.min(begin, end);
 	var b = Math.max(begin, end);
-	if(a<16 && b>15)
-	{
-		return;
-	}
 
 	var obj1 = {
 	  strokeStyle: '#FF0000',
@@ -1059,6 +1270,32 @@ function drawlost(begin, end, temp)
 	
 	var pts1 = [];
 	var pts2 = [];
+	if(a < 16 && b > 15)
+	{
+		if(a == begin)
+		{
+			if(teethList[15][0] == 2)
+			{
+				b = 14;
+			}
+			else
+			{
+				b = 15;
+			}
+		}
+		else
+		{
+			if(teethList[16][0] == 2)
+			{
+				a = 17;
+			}
+			else
+			{
+				a = 16;
+			}
+		}
+	}
+	
 	if(b <= 15)
 	{
 		pts1.push([(teethPos[a][2*(2-Math.floor(a/8))+3][0]+teethPos[a][2-Math.floor(a/8)][0])/2, (teethPos[a][2*(2-Math.floor(a/8))+3][1]+teethPos[a][2-Math.floor(a/8)][1])/2]);
@@ -1239,8 +1476,28 @@ c.addEventListener("mouseup", function (evt)
 		{
 			if(a < 16 && b > 15)
 			{
-				begin = end = current = -1;
-				return;
+				if(a == begin)
+				{
+					if(teethList[15][0] == 2)
+					{
+						b = 14;
+					}
+					else
+					{
+						b = 15;
+					}
+				}
+				else
+				{
+					if(teethList[16][0] == 2)
+					{
+						a = 17;
+					}
+					else
+					{
+						a = 16;
+					}
+				}
 			}
 			for(var i = a; i <= b; i++)
 			{
@@ -1252,8 +1509,28 @@ c.addEventListener("mouseup", function (evt)
 		{
 			if(a < 16 && b > 15)
 			{
-				begin = end = current = -1;
-				return;
+				if(a == begin)
+				{
+					if(teethList[15][0] == 2)
+					{
+						b = 14;
+					}
+					else
+					{
+						b = 15;
+					}
+				}
+				else
+				{
+					if(teethList[16][0] == 2)
+					{
+						a = 17;
+					}
+					else
+					{
+						a = 16;
+					}
+				}
 			}
 			for(var i = a; i <= b; i++)
 			{
@@ -1365,7 +1642,6 @@ function supportSelected()
 //切换状态：显示/隐藏连接体
 function dispConn()
 {
-	
 	if(isconndisped)
 	{
 		isconndisped = false;
@@ -1375,10 +1651,12 @@ function dispConn()
 	}
 	else
 	{
+		conntypelist = [document.getElementById("topConn1").checked, document.getElementById("topConn2").checked, document.getElementById("botConn1").checked];
 		isconndisped = true;
 		$('#conn').val('隐藏连接体');
 		$('#conn').removeClass("blue_btn");
 		$('#conn').addClass("red_btn");
+		
 	}
 	confset();
 }
@@ -1456,7 +1734,7 @@ function changeWTeeth()
 	{
 		teethList[15] = [2, 0, 0, 0];
 	}
-	if(wt[2])
+	if(wt[3])
 	{
 		teethList[16][0] = 0;
 	}
@@ -1464,7 +1742,7 @@ function changeWTeeth()
 	{
 		teethList[16] = [2, 0, 0, 0];
 	}
-	if(wt[3])
+	if(wt[2])
 	{
 		teethList[31][0] = 0;
 	}
@@ -1515,11 +1793,11 @@ function getsourceString(pos)
 		}
 		else if(teethList[31][0] == 2 && teethList[16][0] != 2)
 		{
-			sourceString = './img/bottom_teeth_RM.png';
+			sourceString = './img/bottom_teeth_LM.png';
 		}
 		else if(teethList[31][0] != 2 && teethList[16][0] == 2)
 		{
-			sourceString = './img/bottom_teeth_LM.png';
+			sourceString = './img/bottom_teeth_RM.png';
 		}
 		else
 		{
@@ -1701,18 +1979,32 @@ function deepCopy(arr)
 function getEdgeStickPos(pos, length)
 {
 	var x1, x2, posbeside, y1, y2;
-	posbeside = pos[0] + (2*Math.floor(pos[0]/8)-1)*(2*pos[1]-3);
+	if(pos[0] < 16)
+	{
+		posbeside = pos[0] + (2*Math.floor(pos[0]/8)-1)*(2*pos[1]-3);
+	}
+	else
+	{
+		posbeside = pos[0] + (2*Math.floor((pos[0]-16)/8)-1)*(2*pos[1]-3);
+	}
 	x1 = teethPos[pos[0]][pos[1]][0];
 	y1 = teethPos[pos[0]][pos[1]][1];
 	if(length == 'long')
 	{
-		x2 = (x1 + 3*(teethPos[pos[0]][4][0] + teethPos[posbeside][4][0])/2)/4;
-		y2 = (y1 + 3*(teethPos[pos[0]][4][1] + teethPos[posbeside][4][1])/2)/4;
+		x2 = (teethPos[pos[0]][4][0] + teethPos[posbeside][4][0] + teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/4;
+		y2 = (teethPos[pos[0]][4][1] + teethPos[posbeside][4][1] + teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/4;
+		//x2 = (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2;
+		//y2 = (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2;
+	}
+	else if(length == 'short')
+	{
+		x2 = (x1 + (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2)/2;
+		y2 = (y1 + (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2)/2;
 	}
 	else
 	{
-		x2 = (x1 + (teethPos[pos[0]][4][0] + teethPos[posbeside][4][0])/2)/2;
-		y2 = (y1 + (teethPos[pos[0]][4][1] + teethPos[posbeside][4][1])/2)/2;
+		x2 = (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2;
+		y2 = (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2;
 	}
 	
 	return([x2, y2]);
