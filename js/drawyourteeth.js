@@ -9,148 +9,19 @@
  * V6：新增备注功能，进一步优化连接体绘制规则，微调了卡环和支托形态
  */
 
-
-/*
-/////////////
-全局变量定义
-/////////////
-*/
-
-//牙齿标志点列表
-var teethPos = 
-[
-	[[84.5,245],[88.5,227],[78.5,261],[64.5,237],[102.5,250],[74.5,229],[101.5,235],[66.5,252],[93.5,259],[52,233],[111,252]],
-	[[90.5,208],[94.5,192],[88.5,227],[69.5,202],[113.5,214],[80.5,193],[111.5,200],[74.5,218],[107.5,227],[56,197],[118,218]],
-	[[97.5,170],[101.5,152],[94.5,190],[76.5,166],[120.5,175],[84.5,152],[118.5,159],[77.5,181],[114.5,192],[64,157],[124,179]],
-	[[106.5,137],[109.5,123],[100.5,150],[88.5,129],[124.5,143],[98.5,123],[123.5,130],[90.5,142],[115.5,150],[76,123],[132,146]],
-	[[119.5,109],[122.5,95],[110.5,123],[101.5,102],[137.5,115],[110.5,95],[135.5,103],[101.5,114],[125.5,124],[87,93],[140,116]],
-	[[131.5,81],[140.5,69],[123.5,95],[119.5,70],[142.5,92],[130.5,66],[146.5,80],[116.5,80],[133.5,94],[108,61],[151,96]],
-	[[153.5,63],[165.5,55],[140.5,68],[146.5,53],[160.5,71],[157.5,50],[165.5,63],[140.5,60],[150.5,73],[139,39],[166,82]],
-	[[183.5,53],[201.5,51],[166.5,56],[181.5,39],[184.5,68],[194.5,41],[195.5,60],[170.5,44],[174.5,64],[180,31],[187,74]],
-	[[219.5,52],[201.5,52],[235.5,56],[220.5,38],[216.5,67],[209.5,41],[207.5,61],[233.5,43],[228.5,63],[220,30],[216,74]],
-	[[248.5,61],[235.5,54],[259.5,68],[255.5,51],[240.5,71],[245.5,50],[237.5,64],[261.5,59],[250.5,72],[264,40],[236,80]],
-	[[269.5,81],[260.5,68],[278.5,96],[284.5,70],[256.5,90],[272.5,66],[256.5,80],[285.5,84],[268.5,95],[293,65],[250,94]],
-	[[281.5,110],[278.5,95],[289.5,124],[299.5,100],[265.5,117],[290.5,95],[268.5,103],[300.5,114],[276.5,122],[311,97],[261,116]],
-	[[294.5,135],[290.5,123],[299.5,150],[313.5,128],[276.5,142],[303.5,123],[280.5,130],[310.5,142],[285.5,150],[325,126],[269,143]],
-	[[303.5,171],[297.5,151],[308.5,192],[326.5,163],[281.5,177],[315.5,152],[283.5,160],[324.5,181],[289.5,192],[337,162],[277,178]],
-	[[308.5,210],[309.5,191],[311.5,227],[331.5,204],[287.5,216],[323.5,192],[292.5,198],[326.5,221],[295.5,227],[344,202],[283,217]],
-	[[317.5,244],[311.5,228],[321.5,270],[337.5,237],[296.5,246],[327.5,228],[301.5,234],[333.5,254],[304.5,257],[350,240],[288,246]],
-	[[315,311],[314,330],[313,278],[337,310],[297,310],[331,325],[298,324],[329,293],[303,293],[345,308.6],[288,309.6]],
-	[[312,350],[306,369],[314,330],[334,351],[294,349],[327,371],[295,361],[330,337],[299,334],[343,351.6],[282,350.6]],
-	[[298,391],[291,413],[307,369],[320,399],[280,385],[309,413],[278,401],[318,379],[289,372],[330,399.6],[272,383.6]],
-	[[287,429],[278,442],[292,413],[302,438],[273,422],[291,445],[271,433],[303,422],[280,413],[313,437.6],[262,418.6]],
-	[[271,456],[264,468],[279,441],[287,463],[258,447],[276,469],[259,457],[285,450],[267,442],[296,466.6],[251,442.6]],
-	[[256,481],[245,488],[265,468],[268,491],[245,469],[256,492],[244,478],[270,479],[254,466],[274,495.6],[240,463.6]],
-	[[234,493],[223,496],[245,489],[239,508],[230,479],[229,504],[225,486],[245,498],[238,482],[243,515.6],[228,474.6]],
-	[[211,499],[201,498],[222,496],[213,512],[209,487],[204,507],[204,491],[220,505],[216,490],[214,518.6],[208,481.6]],
-	[[189,499],[200,498],[179,496],[186,512],[191,488],[196,508],[197,492],[180,505],[185,492],[187,519.6],[190,482.6]],
-	[[166,493],[179,497],[155,489],[162,507],[170,479],[172,504],[175,486],[156,499],[163,484],[156,515.6],[173,473.6]],
-	[[143,479],[155,489],[136,469],[131,490],[157,468],[144,494],[157,479],[131,477],[146,466],[124,497.6],[161,464.6]],
-	[[128,455],[136,470],[123,443],[114,462],[141,445],[124,468],[141,458],[116,450],[132,443],[104,471.6],[147,442.6]],
-	[[113,429],[121,444],[109,414],[96,436],[129,422],[107,443],[130,435],[100,423],[122,413],[88,442.6],[136,418.6]],
-	[[100,391],[109,414],[93,371],[81,398],[120,385],[89,412],[123,401],[81,381],[110,372],[71,400.6],[127,383.6]],
-	[[88,351],[94,371],[85,331],[67,355],[105,349],[76,369],[105,361],[69,337],[101,334],[57,356.6],[118,349.6]],
-	[[85,309],[85,331],[83,277],[64,310],[104,308],[69,325],[101,325],[71,295],[96,292],[55,311.6],[112,308.6]]
-];
-
-var topMidPos = [[78.5,261],[88.5,227],[94.5,190],[100.5,150],[110.5,123],[123.5,95],[140.5,68],[166.5,56],[201.5,52],[235.5,54],[260.5,68],[278.5,95],[290.5,123],[297.5,151],[309.5,191],[311.5,228],[321.5,270]];
-var botMidPos = [[313,278],[314,330],[307,369],[292,413],[279,441],[265,468],[245,489],[222,496],[200,498],[179,497],[155,489],[136,470],[121,444],[109,414],[94,371],[85,331],[83,277]];
-
-//按钮选择状态
-var state = 0;
-
-//是否绘制连接体
-var isconndisped = false;
-
-//是否允许编辑连接体
-var isconnmodify = false;
-
-//牙位选择器：选择的起始和终止牙位
-var begin = -1;
-var end = -1;
-var current = -1;
-
-//当前鼠标位置
-var currentMousePos = [0,0];
-
-//点击右键菜单前记录右键点击位置
-var postRclickpos = [0,0];
-
-//点击右键菜单前记录已经删除的备注条目位置信息
-var remarkData = [];
-
-//拖拽点距文本框左上角的相对位移
-var measure = [0,0];
-
-//上颌中心点坐标
-var centerX = 197;
-var centerY = 171;
-
-//图片位置坐标
-var picPosX1 = 200;
-var picPosY1 = 150;
-
-var picPosX2 = 200;
-var picPosY2 = 400;
-
-//存放牙齿详细信息的矩阵
-var teethList = new Array();
-for(var i = 0; i < 32; i++)
-{
-	teethList.push([0, 0, 0, 0]);
-}
-teethList[0][0] = teethList[15][0] = teethList[16][0] = teethList[31][0] = 2;
-
-
-//存放当前连接体片段中各曲线的顶点
-var quadraticTops = [];
-
-//操作队列
-var actionList = [];
-var actionCursor = -1;
-var LastTeethList = deepCopy(teethList);
-var LastQuadraticTops = deepCopy(quadraticTops);
-
-//存放备注列表
-var remarkList = [];
-
-//被调整过的图层编号，以便保留handle
-var adjustIndex = -2;
-
-//连接体形态标识
-var conntypelist = [false, false, false];
-
-//画布扩大后的临时处理
-for(var i = 0; i < 32; i++)
-{
-	for(var j = 0; j < 11; j++)
-	{
-		teethPos[i][j][0] += 100;
-		teethPos[i][j][1] += 100;
-	}
-}
-centerX += 100;
-centerY += 100;
-picPosX1 += 100;
-picPosY1 += 100;
-picPosX2 += 100;
-picPosY2 += 100;
-
-
-
+ 
 /*
 ////////////////////////////////////////
 初始化动作：建立canvas对象，绘制基本牙列
 ////////////////////////////////////////
 */
-var c=document.getElementById("myCanvas");
-var cxt=c.getContext("2d");
+
+LastTeethList = deepCopy(teethList);
+LastQuadraticTops = deepCopy(quadraticTops);
 loadteethmap(teethList);
 document.oncontextmenu = function(e){ 
 	return false; 
 };
-
-
 
 
 /*
@@ -159,9 +30,18 @@ document.oncontextmenu = function(e){
 /////////////////////////////////////////
 */
 
-//绘制备注
+/*
+********
+绘制备注
+********
+ID：			传入备注建立的初始坐标作为备注的唯一标识
+remarkpos：		备注左上角的坐标
+linepos：		备注起点的坐标
+content：		备注内容
+*/
 function drawRemark(ID, remarkpos, linepos, content)
 {
+	//临时text对象
 	var obj = {
 		type: 'text', 
 		mID: ID, 
@@ -176,27 +56,44 @@ function drawRemark(ID, remarkpos, linepos, content)
 		maxWidth: 50,
 		rtclick: false
 	};
+	
+	//暂时绘制一次，以便获取文字需要占用的宽度和高度
 	$('canvas').addLayer(obj).drawLayers();
 	var twidth = $('canvas').measureText('tempRemark').width;
 	var theight = $('canvas').measureText('tempRemark').height;
+	
+	//完善临时text对象为用于正式绘制
 	obj.name = content;
 	obj.x += twidth/2;
 	obj.y += theight/2;
+	
+	//拖拽响应部分
 	obj.dragstart = function(layer){
+		
+		//是否为右键拖动？
 		if(event.button == 2)
 		{
 			layer.rtclick = true;
 			return;
 		}
+		
+		//记录拖动锚点与备注左上角的相对位置
 		measure[0] = currentMousePos.x - remarkpos[0];
 		measure[1] = currentMousePos.y - remarkpos[1];
+		
+		//移除备注引导线
 		$('canvas').removeLayer(content+'line').drawLayers();
 	};
 	obj.dragstop = function(layer) {
+		
+		//不响应右键的拖拽行为
 		if(!layer.rtclick)
 		{
+			//根据当前鼠标位置和之前记录的相对位置关系更新备注左上角坐标
 			layer.x = currentMousePos.x-measure[0]+twidth/2;
 			layer.y = currentMousePos.y-measure[1]+theight/2;
+			
+			//更改全局变量remarkList中该备注的位置
 			for(var i = 0; i < remarkList.length; i++)
 			{
 				if(remarkList[i][0].toString() == layer.mID)
@@ -209,7 +106,10 @@ function drawRemark(ID, remarkpos, linepos, content)
 		}
 	};
 	
+	//移除临时text对象，绘制正式text
 	$('canvas').addLayer(obj).removeLayer('tempRemark').drawLayers();
+	
+	//根据备注点坐标 和 备注框左上角坐标 的相对位置，确定引导线与备注框的连接点
 	var connPoint = {};
 	var k = (linepos[1]-obj.y)/(linepos[0]-obj.x);
 	var kt = theight/twidth;
@@ -238,12 +138,13 @@ function drawRemark(ID, remarkpos, linepos, content)
 		}
 	}
 	
+	//绘制引导线 
 	$('canvas').drawLine({
 		name: content+'line',
 		layer: true, 
 		visible: true,
 		strokeStyle: '#00000',
-		strokeWidth: 1,
+		strokeWidth: 2,
 		x1: connPoint.x, y1: connPoint.y,
 		x2: linepos[0], y2: linepos[1],
 		handle: {
@@ -253,6 +154,8 @@ function drawRemark(ID, remarkpos, linepos, content)
 			strokeWidth: 2,
 			radius: 3
 		},
+		
+		//拖动停止，更新全局变量remarkList中的备注点坐标
 		handlestop: function(){
 			for(var i = 0; i < remarkList.length; i++)
 			{
@@ -267,35 +170,52 @@ function drawRemark(ID, remarkpos, linepos, content)
 }
 
 
-//连接体调整图层点击事件的响应函数（绘制用于拖拽调整的紫色图层）
+/*
+*************************************************************
+连接体调整图层点击事件的响应函数（绘制用于拖拽调整的紫色图层）
+*************************************************************
+layer：			连接体调整图层对象
+*/
 function clickREP(layer)
 {
+	//获取以清除所有的引导线对象（目前只能通过类型、宽度和颜色识别，要求后面不能使用宽度为1的紫色直线）
 	var guidelinelist = $('canvas').getLayers(function(layer) {
-		return (layer.type == 'line' && layer.strokeWidth == 1);
+		return (layer.type == 'line' && layer.strokeWidth == 1 && layer.strokeStyle == '#ED05FC');
 	});
+	
+	//删除引导线
 	var layers = $('canvas').getLayers();
 	for(var i = 0; i < guidelinelist.length; i++)
 	{
 		layers.splice(guidelinelist[i].index, 1);
 	}
+	
+	//删除其它的紫色操作图层（此时该图层绑定的handle会一起被删除）
 	$('canvas').removeLayerGroup('myConns').drawLayers();
-	var handleajustObj = {};
+	
+	//在全局变量adjustIndex中记录当前调整的曲线在构成大连接体的所有曲线中的序号，用于在拖拽调整后的重绘后维持当前曲线片段的被调整状态
 	adjustIndex = layer.idnum;
-	handleajustObj.layer = true;
-	handleajustObj.strokeStyle = '#ED05FC';
-	handleajustObj.strokeWidth = 2;
-	handleajustObj.rounded = true;
-	handleajustObj.groups = ['myConns'];
-	handleajustObj.handle = {
-		type: 'arc',
-		fillStyle: '#FFFFFF',
+	
+	//新建一个紫色操作图层
+	var handleajustObj = {
+		layer: true,
 		strokeStyle: '#ED05FC',
 		strokeWidth: 2,
-		radius: 2
-	};
-	handleajustObj.guide = {
-		strokeStyle: '#ED05FC',
-		strokeWidth: 1
+		rounded: 10,
+		groups: ['myConns'],
+		handle: {
+			type: 'arc',
+			fillStyle: '#FFFFFF',
+			strokeStyle: '#ED05FC',
+			strokeWidth: 2,
+			radius: 2
+		},
+		guide: {
+			strokeStyle: '#ED05FC',
+			strokeWidth: 1
+		},
+		//记录被拖动更改的是贝塞尔/抛物线上的哪一个点。1：起点，2：终点，3：第一参照点，4：第二参照点（仅针对三次贝塞尔曲线）
+		mp: 3,
 	};
 	handleajustObj.type = layer.type;
 	handleajustObj.x1 = layer.x1;
@@ -309,11 +229,11 @@ function clickREP(layer)
 	}
 	handleajustObj.x2 = layer.x2;
 	handleajustObj.y2 = layer.y2;
-	handleajustObj.mp = 3;
-	handleajustObj.px = 0;
-	handleajustObj.py = 0;
+	
+	//调整点拖拽响应
 	handleajustObj.handlestart = function(layer) {
-		// code to run when resizing starts
+		
+		//找出被拖拽的是哪一个调整点（仅针对贝塞尔曲线，因为抛物线一定是调整顶点）
 		if(layer.type == 'bezier')
 		{
 			var mindis = dis(currentMousePos.x, currentMousePos.y, layer.cx1, layer.cy1);
@@ -332,23 +252,28 @@ function clickREP(layer)
 				mindis = dis(currentMousePos.x, currentMousePos.y, layer.x1, layer.y1);
 				layer.mp = 1;
 			}
-			layer.px1 = layer.x1;
-			layer.py1 = layer.y1;
-			layer.px2 = layer.x2;
-			layer.py2 = layer.y2;
 		}
+		
+		//记录调整点被拖动前，曲线的起点和终点位置
+		layer.px1 = layer.x1;
+		layer.py1 = layer.y1;
+		layer.px2 = layer.x2;
+		layer.py2 = layer.y2;
 	};
 	handleajustObj.handlestop = function(layer) {
-		// code to run while resizing stops
+		
+		//在全局变量quadraticTop寻找该曲线的历史数据，用新数据覆盖
 		var i;
 		for(i = 0; i < quadraticTops.length; i++)
 		{
 			if(quadraticTops[i][1][0] == layer.px1 && quadraticTops[i][2][0] == layer.px2 )
 			{
+				//如果被调整的是参考点，直接用当前鼠标坐标覆盖记录即可
 				if(layer.mp > 2)
 				{
 					quadraticTops[i][layer.mp] = [currentMousePos.x, currentMousePos.y];
 				}
+				//否则只取当前鼠标坐标的Y值（用于调整口腔中轴线上参考点的上下调整）
 				else
 				{
 					if(quadraticTops[i][layer.mp][0] == centerX)
@@ -359,6 +284,8 @@ function clickREP(layer)
 				break;
 			}
 		}
+		
+		//没有相关历史记录则新建
 		if(i == quadraticTops.length)
 		{
 			var temp = [];
@@ -396,11 +323,13 @@ function clickREP(layer)
 			}
 			quadraticTops.push(temp);
 		}
+		
 		storeChange('quadraticTops');
 		redrawall();
 	};
 	$('canvas').addLayer(handleajustObj).drawLayers();
 }
+
 
 //绘制连接体的一个部件：连接体在牙列边缘的短粗线
 function drawedgestick(pos)
@@ -520,15 +449,11 @@ function drawConn(type)
 			}
 			else
 			{
-				drawedgestick(llist[i][0]);
-				drawedgestick(llist[i][1]);
-				//plist.push(['Line', teethPos[llist[i][0][0]][llist[i][0][1]], getEdgeStickPos(llist[i][0])]);
 				temp = connTwoPoint(llist[i][0], llist[i][1]);
 				for(var j = 0; j < temp.length; j++)
 				{
 					plist.push(temp[j]);
 				}
-				//plist.push(['Line', teethPos[llist[i][1][0]][llist[i][1][1]], getEdgeStickPos(llist[i][1])]);
 			}
 		}
 
@@ -724,8 +649,8 @@ function drawConn(type)
 		}
 		else
 		{
-			var p1 = getEdgeStickPos(botConnBegin, 'longlong');
-			var p2 = getEdgeStickPos(botConnBegin, 'long');
+			var p1 = getEdgeStickPos(botConnBegin, 'long');
+			var p2 = getEdgeStickPos(botConnBegin, 'short');
 			
 			
 			if(botConnBegin[1] == 2)
@@ -753,8 +678,8 @@ function drawConn(type)
 		}
 		else
 		{
-			var p1 = getEdgeStickPos(botConnEnd, 'longlong');
-			var p2 = getEdgeStickPos(botConnEnd, 'long');
+			var p1 = getEdgeStickPos(botConnEnd, 'long');
+			var p2 = getEdgeStickPos(botConnEnd, 'short');
 			
 			if(botConnEnd[1] == 2)
 			{
@@ -1989,78 +1914,136 @@ function getEdgeStickPos(pos, length)
 	}
 	x1 = teethPos[pos[0]][pos[1]][0];
 	y1 = teethPos[pos[0]][pos[1]][1];
+	
 	if(length == 'long')
 	{
-		x2 = (teethPos[pos[0]][4][0] + teethPos[posbeside][4][0] + teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/4;
-		y2 = (teethPos[pos[0]][4][1] + teethPos[posbeside][4][1] + teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/4;
-		//x2 = (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2;
-		//y2 = (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2;
+		return getIntersection(teethPos[pos[0]][pos[1]], getMidPoint(pos[0], pos[1]), teethPos[pos[0]][10], teethPos[posbeside][10]);
 	}
 	else if(length == 'short')
 	{
-		x2 = (x1 + (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2)/2;
-		y2 = (y1 + (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2)/2;
+		return getIntersection(teethPos[pos[0]][pos[1]], getMidPoint(pos[0], pos[1]), teethPos[pos[0]][4], teethPos[posbeside][4]);
 	}
-	else
-	{
-		x2 = (teethPos[pos[0]][10][0] + teethPos[posbeside][10][0])/2;
-		y2 = (teethPos[pos[0]][10][1] + teethPos[posbeside][10][1])/2;
-	}
-	
-	return([x2, y2]);
 }
 
-//计算连接体中两点间的相连方式
+//计算绘制牙缝之间的“凹”形所需的连接点：
+//pos——牙缝位置
+//type——
+//	'begin':返回起点一侧的连接点
+//	'end'：返回终点一侧的连接点
+function getGapPoint(pos, type)
+{
+	var gapPoint1, gapPoint2, transX, transY, posbeside;
+	var p = teethPos[pos[0]][pos[1]];
+	var midp = getMidPoint(pos[0], pos[1]);
+	
+	if(type == 'begin')
+	{
+		transX = 2/Math.sqrt(Math.pow((p[0]-midp[0])/(p[1]-midp[1]), 2)+1);
+	}
+	else if(type == 'end')
+	{
+		transX = -2/Math.sqrt(Math.pow((p[0]-midp[0])/(p[1]-midp[1]), 2)+1);
+	}
+	transY = -transX*(p[0]-midp[0])/(p[1]-midp[1]);
+	posbeside = pos[0] + (2*Math.floor(pos[0]/8)-1)*(2*pos[1]-3);
+	gapPoint1 = [p[0] + transX, p[1] + transY];
+	gapPoint2 = getIntersection(p, midp, teethPos[pos[0]][10], teethPos[posbeside][10]);
+	gapPoint2[0] += transX;
+	gapPoint2[1] += transY;
+	return {inner:gapPoint1, outer:gapPoint2};
+}
+
+//计算连接体中两点间的相连方式（用于组合路径）
 function connTwoPoint(pos1, pos2)
 {
-	var p1 = getEdgeStickPos(pos1, 'short');
-	var p2 = getEdgeStickPos(pos2, 'short');
-
-	//var p1 = teethPos[pos1[0]][pos1[1]];
-	//var p2 = teethPos[pos2[0]][pos2[1]];
+	var p1 = teethPos[pos1[0]][pos1[1]];
+	var p2 = teethPos[pos2[0]][pos2[1]];
 	var midp1 = getMidPoint(pos1[0], pos1[1]);
 	var midp2 = getMidPoint(pos2[0], pos2[1]);
-	var llist = [];
+	var temp = [];
+	var gapPoints, gapPoint1, gapPoint2, gapPoint3, gapPoint4, transX, transY, posbeside;
+	
 	if((p1[0]-centerX)*(p2[0]-centerX) >= 0)
 	{
-		return [['Bezier', p1, p2, [(p1[0]+midp1[0])/2, (p1[1]+midp1[1])/2], [(p2[0]+midp2[0])/2, (p2[1]+midp2[1])/2]]];
+		gapPoints = getGapPoint(pos1, 'begin');
+		gapPoint1 = gapPoints.inner;
+		gapPoint2 = gapPoints.outer;
+		
+		gapPoints = getGapPoint(pos2, 'end');
+		gapPoint3 = gapPoints.outer;
+		gapPoint4 = gapPoints.inner;
+		
+		return [
+			['Line', p1, gapPoint1],
+			['Line', gapPoint1, gapPoint2],
+			['Bezier', gapPoint2, gapPoint3, [(gapPoint2[0]+midp1[0])/2, (gapPoint2[1]+midp1[1])/2], [(gapPoint3[0]+midp2[0])/2, (gapPoint3[1]+midp2[1])/2]],
+			['Line', gapPoint3, gapPoint4],
+			['Line', gapPoint4, p2]
+		];
 	}
 	else
 	{
 		var cPoint = [centerX, (midp1[1]+midp2[1])/2];
 		if(Math.abs(midp1[1]-midp2[1]) > 20)
 		{
-			var temp = [];
-			var tp1, tp2,tmpx;
-			if(cPoint[1] < p1[1] && cPoint[1] > midp1[1])
+			var tp1, tp2, tmpx;
+			
+			gapPoints = getGapPoint(pos1, 'begin');
+			gapPoint1 = gapPoints.inner;
+			gapPoint2 = gapPoints.outer;
+			temp.push(['Line', p1, gapPoint1]);
+			temp.push(['Line', gapPoint1, gapPoint2]);
+			
+			if(cPoint[1] < gapPoint2[1] && cPoint[1] > midp1[1])
 			{
-				tmpx = (cPoint[1]-p1[1])*(p1[0]-midp1[0])/(p1[1]-midp1[1])+p1[0];
-				tp1 = [(p1[0]+tmpx)/2, (p1[1]+cPoint[1])/2];
+				tmpx = (cPoint[1]-gapPoint2[1])*(gapPoint2[0]-midp1[0])/(gapPoint2[1]-midp1[1])+gapPoint2[0];
+				tp1 = [(gapPoint2[0]+tmpx)/2, (gapPoint2[1]+cPoint[1])/2];
 				tp2 = [(cPoint[0]+3*tmpx)/4, cPoint[1]];
 			}
 			else
 			{
-				tp1 = [(3*p1[0]+midp1[0])/4, (3*p1[1]+midp1[1])/4];
-				tp2 = [(p1[0]+midp1[0])/2, cPoint[1]];
+				tp1 = [(3*gapPoint2[0]+midp1[0])/4, (3*gapPoint2[1]+midp1[1])/4];
+				tp2 = [(gapPoint2[0]+midp1[0])/2, cPoint[1]];
 			}
-			temp.push(['Bezier', p1, cPoint, tp1, tp2]);
-			if(cPoint[1] < p2[1] && cPoint[1] > midp2[1])
+			temp.push(['Bezier', gapPoint2, cPoint, tp1, tp2]);
+			
+			gapPoints = getGapPoint(pos2, 'end');
+			gapPoint3 = gapPoints.outer;
+			gapPoint4 = gapPoints.inner;
+			
+			if(cPoint[1] < gapPoint3[1] && cPoint[1] > midp2[1])
 			{
-				tmpx = (cPoint[1]-p2[1])*(p2[0]-midp2[0])/(p2[1]-midp2[1])+p2[0];
-				tp1 = [(p2[0]+tmpx)/2, (p2[1]+cPoint[1])/2];
+				tmpx = (cPoint[1]-gapPoint3[1])*(gapPoint3[0]-midp2[0])/(gapPoint3[1]-midp2[1])+gapPoint3[0];
+				tp1 = [(gapPoint3[0]+tmpx)/2, (gapPoint3[1]+cPoint[1])/2];
 				tp2 = [(cPoint[0]+3*tmpx)/4, cPoint[1]];
 			}
 			else
 			{
-				tp1 = [(3*p2[0]+midp2[0])/4, (3*p2[1]+midp2[1])/4];
-				tp2 = [(p2[0]+midp2[0])/2, cPoint[1]];
+				tp1 = [(3*gapPoint3[0]+midp2[0])/4, (3*gapPoint3[1]+midp2[1])/4];
+				tp2 = [(gapPoint3[0]+midp2[0])/2, cPoint[1]];
 			}
-			temp.push(['Bezier', cPoint, p2, tp2, tp1]);
+			temp.push(['Bezier', cPoint, gapPoint3, tp2, tp1]);
+			temp.push(['Line', gapPoint3, gapPoint4]);
+			temp.push(['Line', gapPoint4, p2]);
+			
 			return temp;
 		}
 		else
 		{
-			return [['Quadratic', p1, p2, cPoint]];
+			gapPoints = getGapPoint(pos1, 'begin');
+			gapPoint1 = gapPoints.inner;
+			gapPoint2 = gapPoints.outer;
+			gapPoints = getGapPoint(pos2, 'end');
+			gapPoint3 = gapPoints.outer;
+			gapPoint4 = gapPoints.inner;
+			
+			return [
+				['Line', p1, gapPoint1],
+				['Line', gapPoint1, gapPoint2],
+				['Quadratic', gapPoint2, gapPoint3, cPoint],
+				['Line', gapPoint3, gapPoint4],
+				['Line', gapPoint4, p2]
+			];
 		}
 	}
 }
@@ -2071,6 +2054,16 @@ function getMidPoint(tnum, pos)
 	var x = centerX;
 	var k = (teethPos[tnum][1][0] - teethPos[tnum][2][0])/(teethPos[tnum][2][1] - teethPos[tnum][1][1]);
 	var y = k*(x - teethPos[tnum][pos][0])+teethPos[tnum][pos][1];
+	return [x, y];
+}
+
+//计算两条直线交点
+function getIntersection(p1, p2, p3, p4)
+{
+	var k1 = (p2[1]-p1[1])/(p2[0]-p1[0]);
+	var k2 = (p4[1]-p3[1])/(p4[0]-p3[0]);
+	var x = (k1*p1[0]-p1[1]-k2*p3[0]+p3[1])/(k1-k2);
+	var y = k1*(x-p1[0])+p1[1];
 	return [x, y];
 }
 
