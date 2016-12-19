@@ -36,13 +36,13 @@
 		Tool For Removable Partial Denture Design
 	</div>
 </div>
-<div style="margin:0 auto; margin-top:80px;padding-left: 20px;padding-right: 20px; min-width:1500px;" >
+<div style="margin:0 auto; margin-top:80px;padding-left: 20px;padding-right: 20px;" >
 	<canvas id="myCanvas" width="700" height="750" style="border:1px solid #c3c3c3;float:left;"></canvas>
 
-	<div id="teethnav" class="pure-form" style="width:750px;float:left;text-align:left;margin-left:20px;">
+	<div id="teethnav" class="pure-form" style="float:left;text-align:left;margin-left:20px;">
 		<div class="pure-g">
 		    <div class="pure-u-1"><div style="font-size:20px;margin-bottom:15px;">请选择</div><hr></div>
-			<div class="pure-u-1-2">智齿：&emsp;&emsp;&emsp;&emsp;&emsp;
+			<div class="pure-u-1">智齿：&emsp;&emsp;&emsp;&emsp;&emsp;
 				<label for="wteeth1">
 					<input id="wteeth1" type="checkbox" onclick="changeWTeeth();"> 右上
 				</label>
@@ -57,10 +57,10 @@
 				</label>
 			</div>
 			<div class="pure-u-1">&emsp;</div>
-			<div class="pure-u-1-2">1.标记缺失牙：&emsp;
+			<div class="pure-u-1">1.标记缺失牙：&emsp;
 			<input type="button" class="pure-button red_btn" id = "lost" onclick="lostSelected();" value="缺失"></div>
 		    <div class="pure-u-1">&emsp;</div>
-		    <div class="pure-u-1-2">2.绘制支托：&emsp;&emsp;
+		    <div class="pure-u-1">2.绘制支托：&emsp;&emsp;
 		    <select id = "support" onchange="supportSelected();">
 					<option value="0">--请选择--</option>
 					<option value="41" >支托</option>
@@ -91,7 +91,7 @@
 				</select>
 			</div>
 			<div class="pure-u-1">&emsp;</div>
-			<div class="pure-u-1-2">4.绘制基托：&emsp;&emsp;
+			<div class="pure-u-1">4.绘制基托：&emsp;&emsp;
 			    <select id = "base" onchange="baseSelected();">
 					<option value="0">--请选择--</option>
 					<option value="21" >完整基托</option>
@@ -114,6 +114,8 @@
 				<label for="botConn1">
 					<input id="botConn1" type="checkbox"> 舌板
 				</label>
+				<br>
+				<br>
 				<input type="button" class = "pure-button blue_btn" id = "conn" onclick="dispConn();" value="显示连接体">&emsp;
 				<input type="button" class = "pure-button blue_btn" id = "modfconn" onclick="modfConn();" value="调整连接体">&emsp;
 			</div>
