@@ -9,6 +9,8 @@
  * V6：新增备注功能，进一步优化连接体绘制规则，微调了卡环和支托形态
  */
 
+
+
  
 /*
 ////////////////////////////////////////
@@ -650,6 +652,14 @@ function getGapPoint(pos, type)
 {
 	var gapPoint1, gapPoint2, transX, transY;
 	var posbeside = pos[0] + (2*(Math.floor(pos[0]/8)%2)-1)*(2*pos[1]-3);
+	if(posbeside == -1)
+	{
+		posbeside = 31;
+	}
+	else if(posbeside == 32)
+	{
+		posbeside = 0;
+	}
 	var p = teethPos[pos[0]][pos[1]];
 	var midp = getMidPoint(pos[0], pos[1]);
 	
