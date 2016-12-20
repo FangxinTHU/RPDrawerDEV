@@ -573,8 +573,10 @@ function getConnPoints()
 *********************************************************************
 将连接位置列表转换为绘图信息列表，读取并应用quadraticTops中的顶点坐标【返回绘图信息列表】
 *********************************************************************
+connPoints：待连接位置的列表
+ifcover：是否绘制颚板
 */
-function Pos2Path(connPoints)
+function Pos2Path(connPoints, ifcover)
 {
 	//返回的绘图信息列表，格式：[线型，起点坐标，终点坐标， 其他参照点坐标（0或2个）]
 	var plist = [];
@@ -590,10 +592,34 @@ function Pos2Path(connPoints)
 		else
 		{
 			//曲线，使用特定函数返回用曲线连接两点需要绘制的各个片段
-			cplseg = connTwoPoint(connPoints.llist[i][0], connPoints.llist[i][1]);
-			for(var j = 0; j < cplseg.length; j++)
+			if((connPoints.llist[i][0][0] < 8 && connPoints.llist[i][1][0] > 7) && ifcover)
 			{
-				plist.push(cplseg[j]);
+				var s = connPoints.llist[i][0][0];
+				var e = connPoints.llist[i][1][0];
+				if(connPoints.llist[i][0][1] == 1)
+				{
+					s += 1;
+				}
+				if(connPoints.llist[i][1][1] == 1)
+				{
+					e -= 1;
+				}
+				for(var j = s; j < 8; j++)
+				{
+					plist.push(['Quadratic', teethPos[j][2], teethPos[j][1], teethPos[j][4]]);
+				}
+				for(var j = 8; j <= e; j++)
+				{
+					plist.push(['Quadratic', teethPos[j][1], teethPos[j][2], teethPos[j][4]]);
+				}
+			}
+			else
+			{
+				cplseg = connTwoPoint(connPoints.llist[i][0], connPoints.llist[i][1]);
+				for(var j = 0; j < cplseg.length; j++)
+				{
+					plist.push(cplseg[j]);
+				}
 			}
 		}
 	}
@@ -939,7 +965,7 @@ function drawConn(type)
 	if(connPoints.count > 2)
 	{
 		//根据连接位置列表获取详细绘制信息
-		var plist = Pos2Path(connPoints);
+		var plist = Pos2Path(connPoints, conntypelist[1]);
 		
 		//Path片段计数
 		var count = 1;
@@ -1052,6 +1078,7 @@ function drawConn(type)
 						j++;
 					}
 					j--;
+					i = j;
 					llist.push([connPoints.llist[i][0], connPoints.llist[j][1]]);
 				}
 				else
@@ -1061,7 +1088,7 @@ function drawConn(type)
 			}
 			if(innerPathList.length == 0)
 			{
-				plist = getInnerPath(llist);
+				plist = getInnerPath(llist, true);
 				innerPathList = deepCopy(plist);
 			}
 			else
@@ -1090,7 +1117,7 @@ function drawConn(type)
 				strokeWidth: 2,
 				layer: true,
 				closed: true,
-				rounded: 100
+				rounded: 10
 			};
 			attrvalue = {
 				x1: plist[0][0],
@@ -2142,6 +2169,19 @@ function modfConn()
 }
 
 
+function conntypechanged()
+{
+	isconndisped = false;
+	$('#conn').val('显示连接体');
+	$('#conn').removeClass("red_btn");
+	$('#conn').addClass("blue_btn");
+	isconnmodify = false;
+	$('#modfconn').val('调整连接体');
+	$('#modfconn').removeClass("red_btn");
+	$('#modfconn').addClass("blue_btn");
+	confset();
+}
+
 /*
 **********************
 切换状态：恢复初始状态【无返回值】
@@ -2593,7 +2633,7 @@ function storeChange(listname)
 	}
 	
 	//如果队列达到规模上限，丢弃最老的记录，保留一份TeethList或QuadraticTops的历史备份（为了确保撤销10步之后有可恢复的版本）
-	if(actionList.length >= 10)
+	if(actionList.length >= 20)
 	{
 		if(actionList[0][0] == 'teethList')
 		{
